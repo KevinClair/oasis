@@ -5,7 +5,9 @@ import com.github.kevin.oasis.models.vo.oauth.LoginResponse;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,7 +17,7 @@ import java.util.UUID;
  * JWT Token 工具类
  */
 public class JwtTokenUtils {
-    private static final String SECRET_KEY = "your_secret_key";
+    private static final String SECRET_KEY = "NdS458GLx79HyRdFrR7MXjcrEfFYDG5euKQXAD4z4g4=";
 
     private static final long JWT_TOKEN_EXPIRATION_TIME = 86400000; // 1 天
     private static final long JWT_TOKEN_EXPIRATION_TIME_WEEK = 86400000 * 3; // 7 天
@@ -46,7 +48,7 @@ public class JwtTokenUtils {
     public static UserInfo parseToken(String token) {
         try {
             Claims claims = Jwts.parser()
-                    .setSigningKey(SECRET_KEY)
+                    .setSigningKey(SECRET_KEY).build()
                     .parseClaimsJws(token)
                     .getBody();
             return UserInfo.builder().userId(claims.get(JWT_CLAIM_USER_ID, String.class)).userName(claims.get(JWT_CLAIM_USER_NAME, String.class)).build();
