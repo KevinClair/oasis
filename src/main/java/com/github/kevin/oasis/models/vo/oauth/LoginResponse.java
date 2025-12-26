@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 登录响应
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,12 +15,33 @@ import lombok.NoArgsConstructor;
 public class LoginResponse {
 
     /**
-     * JWT Token
+     * 用户ID
+     */
+    private Long userId;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 访问令牌
      */
     private String token;
 
     /**
-     * Refresh Token
+     * 刷新令牌
      */
     private String refreshToken;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 手机号
+     */
+    private String phone;
 }
+
