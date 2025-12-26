@@ -3,22 +3,26 @@ package com.github.kevin.oasis.services;
 import com.github.kevin.oasis.models.vo.oauth.LoginRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginResponse;
 import com.github.kevin.oasis.models.vo.oauth.UserInfoResponse;
-import org.springframework.web.bind.annotation.RequestBody;
 
-public interface LoginService {
+/**
+ * 认证服务接口
+ */
+public interface AuthService {
 
     /**
-     * 人员登录，登录成功返回 JWT Token 和 Refresh Token
+     * 用户登录
      *
      * @param request 登录请求
-     * @return
+     * @return 登录响应
      */
     LoginResponse login(LoginRequest request);
 
     /**
-     * 获取登录人信息
+     * 获取当前登录用户详细信息
      *
-     * @return
+     * @param userId 用户ID
+     * @return 用户详细信息
      */
-    UserInfoResponse getUserInfo();
+    UserInfoResponse getUserInfo(Long userId);
 }
+

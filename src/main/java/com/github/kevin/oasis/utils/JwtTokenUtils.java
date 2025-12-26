@@ -1,17 +1,11 @@
 package com.github.kevin.oasis.utils;
 
 import com.github.kevin.oasis.models.base.UserInfo;
-import com.github.kevin.oasis.models.vo.oauth.LoginResponse;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 
-import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * JWT Token 工具类
@@ -19,17 +13,17 @@ import java.util.UUID;
 public class JwtTokenUtils {
     private static final String SECRET_KEY = "NdS458GLx79HyRdFrR7MXjcrEfFYDG5euKQXAD4z4g4=";
 
-    private static final long JWT_TOKEN_EXPIRATION_TIME = 86400000; // 1 天
-    private static final long JWT_TOKEN_EXPIRATION_TIME_WEEK = 86400000 * 3; // 7 天
+    private static final long JWT_TOKEN_EXPIRATION_TIME = 86400000; // 1 天 (24小时 * 60分钟 * 60秒 * 1000毫秒)
+    private static final long JWT_TOKEN_EXPIRATION_TIME_WEEK = 86400000 * 7; // 7 天
 
     private static final String JWT_SUBJECT = "user";
     private static final String JWT_CLAIM_USER_ID = "userId";
     private static final String JWT_CLAIM_USER_NAME = "userName";
 
     // 根据 userId 和 userName 生成 token 和 refreshToken
-    public static LoginResponse generateTokens(String userId, String userName, Boolean rememberMe) {
+    public static String generateTokens(String userId, String userName, Boolean rememberMe) {
         // 生成 Token
-        String token = Jwts.builder()
+        return Jwts.builder()
                 .setSubject(JWT_SUBJECT)
                 .claim(JWT_CLAIM_USER_ID, userId)
                 .claim(JWT_CLAIM_USER_NAME, userName)
@@ -37,11 +31,6 @@ public class JwtTokenUtils {
                 .setExpiration(new Date(System.currentTimeMillis() + (rememberMe? JWT_TOKEN_EXPIRATION_TIME_WEEK: JWT_TOKEN_EXPIRATION_TIME)))
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY)
                 .compact();
-
-        // 生成 RefreshToken
-        String refreshToken = UUID.randomUUID().toString();
-
-        return LoginResponse.builder().token(token).refreshToken(refreshToken).build();
     }
 
     // 根据 token 解析出 userId 和 userName
