@@ -2,10 +2,7 @@ package com.github.kevin.oasis.controller;
 
 import com.github.kevin.oasis.global.oauth.Permission;
 import com.github.kevin.oasis.models.base.Response;
-import com.github.kevin.oasis.models.vo.systemManage.UserDeleteRequest;
-import com.github.kevin.oasis.models.vo.systemManage.UserListRequest;
-import com.github.kevin.oasis.models.vo.systemManage.UserListResponse;
-import com.github.kevin.oasis.models.vo.systemManage.UserToggleStatusRequest;
+import com.github.kevin.oasis.models.vo.systemManage.*;
 import com.github.kevin.oasis.services.UserManageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -69,6 +66,38 @@ public class UserManageController {
         int updatedCount = userManageService.toggleUserStatus(request);
 
         return Response.success(updatedCount);
+    }
+
+    /**
+     * 保存用户（新增/编辑）
+     *
+     * @param request 用户信息
+     * @return 成功响应
+     */
+    @PostMapping("/saveUser")
+    @Permission
+    public Response<Long> saveUser(@Valid @RequestBody UserSaveRequest request) {
+        log.info("收到保存用户请求，参数：{}", request);
+
+        Long userId = userManageService.saveUser(request);
+
+        return Response.success(userId);
+    }
+
+    /**
+     * 根据ID获取用户详情
+     *
+     * @param id 用户ID
+     * @return 用户信息
+     */
+    @GetMapping("/getUserById/{id}")
+    @Permission
+    public Response<UserVO> getUserById(@PathVariable Long id) {
+        log.info("收到获取用户详情请求，用户ID：{}", id);
+
+        UserVO userVO = userManageService.getUserById(id);
+
+        return Response.success(userVO);
     }
 }
 

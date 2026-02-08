@@ -6,16 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 /**
- * 用户实体类
+ * 角色实体类
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class User {
+public class Role {
 
     /**
      * 主键ID
@@ -23,54 +22,24 @@ public class User {
     private Long id;
 
     /**
-     * 用户工号
+     * 角色名称
      */
-    private Long userId;
+    private String roleName;
 
     /**
-     * 用户账号
+     * 角色编码
      */
-    private String userAccount;
+    private String roleCode;
 
     /**
-     * 用户名
+     * 角色描述
      */
-    private String userName;
-
-    /**
-     * 密码
-     */
-    private String password;
-
-    /**
-     * 昵称
-     */
-    private String nickName;
-
-    /**
-     * 性别：1-男，2-女
-     */
-    private String userGender;
-
-    /**
-     * 邮箱
-     */
-    private String email;
-
-    /**
-     * 手机号
-     */
-    private String phone;
+    private String roleDesc;
 
     /**
      * 状态：true-启用，false-禁用
      */
     private Boolean status;
-
-    /**
-     * 用户角色列表（角色编码数组）
-     */
-    private List<String> userRoles;
 
     /**
      * 创建人

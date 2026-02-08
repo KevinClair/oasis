@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { jsonClone } from '@sa/utils';
 import { useBoolean } from '@sa/hooks';
-import { enableStatusOptions } from '@/constants/business';
+import {enableStatusBooleanOptions} from '@/constants/business';
+import {fetchSaveRole} from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { $t } from '@/locales';
 import MenuAuthModal from './menu-auth-modal.vue';
@@ -44,20 +44,33 @@ const title = computed(() => {
   return titles[props.operateType];
 });
 
-type Model = Pick<Api.SystemManage.Role, 'roleName' | 'roleCode' | 'roleDesc' | 'status'>;
+type Model = {
+  id?: number;
+  roleName: string;
+  roleCode: string;
+  roleDesc: string;
+  status: boolean | undefined;
+};
 
 const model = ref(createDefaultModel());
+
+const statusOptions = computed(() =>
+  enableStatusBooleanOptions.map(item => ({
+    label: $t(item.label as App.I18n.I18nKey),
+    value: item.value as any
+  }))
+);
 
 function createDefaultModel(): Model {
   return {
     roleName: '',
     roleCode: '',
     roleDesc: '',
-    status: null
+    status: true
   };
 }
 
-type RuleKey = Exclude<keyof Model, 'roleDesc'>;
+type RuleKey = Exclude<keyof Model, 'roleDesc' | 'id'>;
 
 const rules: Record<RuleKey, App.Global.FormRule> = {
   roleName: defaultRequiredRule,
@@ -73,7 +86,13 @@ function handleInitModel() {
   model.value = createDefaultModel();
 
   if (props.operateType === 'edit' && props.rowData) {
-    Object.assign(model.value, jsonClone(props.rowData));
+    model.value = {
+      id: props.rowData.id,
+      roleName: props.rowData.roleName,
+      roleCode: props.rowData.roleCode,
+      roleDesc: props.rowData.roleDesc,
+      status: props.rowData.status ?? true
+    };
   }
 }
 
@@ -83,10 +102,14 @@ function closeDrawer() {
 
 async function handleSubmit() {
   await validate();
-  // request
-  window.$message?.success($t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
+
+  const {error} = await fetchSaveRole(model.value as Api.SystemManage.RoleEdit);
+
+  if (!error) {
+    window.$message?.success($t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  }
 }
 
 watch(visible, () => {
@@ -109,7 +132,7 @@ watch(visible, () => {
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleStatus')" path="status">
           <NRadioGroup v-model:value="model.status">
-            <NRadio v-for="item in enableStatusOptions" :key="item.value" :value="item.value" :label="$t(item.label)" />
+            <NRadio v-for="item in statusOptions" :key="String(item.value)" :value="item.value" :label="item.label"/>
           </NRadioGroup>
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleDesc')" path="roleDesc">

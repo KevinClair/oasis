@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { toRaw } from 'vue';
+import {computed, toRaw} from 'vue';
 import { jsonClone } from '@sa/utils';
-import { enableStatusOptions } from '@/constants/business';
-import { translateOptions } from '@/utils/common';
+import {enableStatusBooleanOptions} from '@/constants/business';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -18,6 +17,13 @@ const emit = defineEmits<Emits>();
 const model = defineModel<Api.SystemManage.RoleSearchParams>('model', { required: true });
 
 const defaultModel = jsonClone(toRaw(model.value));
+
+const statusOptions = computed(() =>
+  enableStatusBooleanOptions.map(item => ({
+    label: $t(item.label as App.I18n.I18nKey),
+    value: item.value as any
+  }))
+);
 
 function resetModel() {
   Object.assign(model.value, defaultModel);
@@ -42,9 +48,9 @@ function search() {
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.role.roleStatus')" path="status" class="pr-24px">
               <NSelect
-                v-model:value="model.status"
+                v-model:value="model.status as any"
                 :placeholder="$t('page.manage.role.form.roleStatus')"
-                :options="translateOptions(enableStatusOptions)"
+                :options="statusOptions"
                 clearable
               />
             </NFormItemGi>

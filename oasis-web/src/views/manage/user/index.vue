@@ -2,16 +2,16 @@
 import { reactive } from 'vue';
 import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { userGenderRecord } from '@/constants/business';
-import { fetchGetUserList, fetchDeleteUsers, fetchToggleUserStatus } from '@/service/api';
-import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
+import {fetchDeleteUsers, fetchGetUserList, fetchToggleUserStatus} from '@/service/api';
+import {useAppStore} from '@/store/modules/app';
 import UserOperateDrawer from './modules/user-operate-drawer.vue';
 import UserSearch from './modules/user-search.vue';
 
 const appStore = useAppStore();
 
-let searchParams: Api.SystemManage.UserSearchParams = reactive({
+const searchParams: Api.SystemManage.UserSearchParams = reactive({
   current: 1,
   size: 10,
   status: null,
@@ -39,13 +39,13 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
     },
     {
       key: 'userId',
-      title: $t('page.manage.user.userId'),
+      title: $t('page.manage.user.userId' as App.I18n.I18nKey),
       align: 'center',
       width: 100
     },
     {
       key: 'userAccount',
-      title: $t('page.manage.user.userAccount'),
+      title: $t('page.manage.user.userAccount' as App.I18n.I18nKey),
       align: 'center',
       minWidth: 120
     },
@@ -94,6 +94,27 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       minWidth: 200
     },
     {
+      key: 'userRoles',
+      title: $t('page.manage.user.userRole'),
+      align: 'center',
+      minWidth: 150,
+      render: row => {
+        if (!row.userRoles || row.userRoles.length === 0) {
+          return <span class="text-gray-400">-</span>;
+        }
+
+        return (
+          <div class="flex flex-wrap justify-center gap-8px">
+            {row.userRoles.map(roleCode => (
+              <NTag key={roleCode} type="info" size="small">
+                {roleCode}
+              </NTag>
+            ))}
+          </div>
+        );
+      }
+    },
+    {
       key: 'status',
       title: $t('page.manage.user.userStatus'),
       align: 'center',
@@ -123,10 +144,15 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
           </NButton>
           <NPopconfirm onPositiveClick={() => handleToggleStatus(row.id)}>
             {{
-              default: () => row.status ? $t('page.manage.user.confirmDisable') : $t('page.manage.user.confirmEnable'),
+              default: () =>
+                row.status
+                  ? $t('page.manage.user.confirmDisable' as App.I18n.I18nKey)
+                  : $t('page.manage.user.confirmEnable' as App.I18n.I18nKey),
               trigger: () => (
                 <NButton type={row.status ? 'warning' : 'success'} ghost size="small">
-                  {row.status ? $t('page.manage.user.disable') : $t('page.manage.user.enable')}
+                  {row.status
+                    ? $t('page.manage.user.disable' as App.I18n.I18nKey)
+                    : $t('page.manage.user.enable' as App.I18n.I18nKey)}
                 </NButton>
               )
             }}
@@ -228,7 +254,7 @@ function edit(id: number) {
               @click="handleBatchToggleStatus"
             >
               <template #icon>
-                <icon-ic:round-swap-horiz class="text-icon" />
+                <icon-ic-round-swap-horiz class="text-icon"/>
               </template>
               {{ $t('page.manage.user.batchToggleStatus') }}
             </NButton>

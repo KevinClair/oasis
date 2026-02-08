@@ -1,9 +1,6 @@
 package com.github.kevin.oasis.services;
 
-import com.github.kevin.oasis.models.vo.systemManage.UserDeleteRequest;
-import com.github.kevin.oasis.models.vo.systemManage.UserListRequest;
-import com.github.kevin.oasis.models.vo.systemManage.UserListResponse;
-import com.github.kevin.oasis.models.vo.systemManage.UserToggleStatusRequest;
+import com.github.kevin.oasis.models.vo.systemManage.*;
 
 /**
  * 用户管理服务接口
@@ -17,6 +14,22 @@ public interface UserManageService {
      * @return 用户列表响应
      */
     UserListResponse getUserList(UserListRequest request);
+
+    /**
+     * 保存用户（新增/编辑）
+     *
+     * @param request 用户信息
+     * @return 用户ID
+     */
+    Long saveUser(UserSaveRequest request);
+
+    /**
+     * 根据ID获取用户详情
+     *
+     * @param id 用户ID
+     * @return 用户信息
+     */
+    UserVO getUserById(Long id);
 
     /**
      * 删除用户（支持批量删除）

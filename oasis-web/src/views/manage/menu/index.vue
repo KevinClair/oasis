@@ -4,8 +4,8 @@ import type { Ref } from 'vue';
 import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { useBoolean } from '@sa/hooks';
 import { yesOrNoRecord } from '@/constants/common';
-import { enableStatusRecord, menuTypeRecord } from '@/constants/business';
-import { fetchGetAllPages, fetchGetMenuList } from '@/service/api';
+import {menuTypeRecord} from '@/constants/business';
+import {fetchDeleteMenus, fetchGetAllPages, fetchGetMenuList} from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
@@ -96,18 +96,16 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
       align: 'center',
       width: 80,
       render: row => {
-        if (row.status === null) {
+        if (row.status === null || row.status === undefined) {
           return null;
         }
 
-        const tagMap: Record<Api.Common.EnableStatus, NaiveUI.ThemeColor> = {
-          1: 'success',
-          2: 'warning'
-        };
+        // Boolean type: true = enabled, false = disabled
+        const isEnabled = row.status === true;
+        const tagType: NaiveUI.ThemeColor = isEnabled ? 'success' : 'warning';
+        const labelKey = isEnabled ? 'page.manage.common.status.enable' : 'page.manage.common.status.disable';
 
-        const label = $t(enableStatusRecord[row.status]);
-
-        return <NTag type={tagMap[row.status]}>{label}</NTag>;
+        return <NTag type={tagType}>{$t(labelKey)}</NTag>;
       }
     },
     {
@@ -181,17 +179,22 @@ function handleAdd() {
 }
 
 async function handleBatchDelete() {
-  // request
-  console.log(checkedRowKeys.value);
+  const ids = checkedRowKeys.value.map(key => Number(key));
+  const {error} = await fetchDeleteMenus(ids);
 
-  onBatchDeleted();
+  if (!error) {
+    window.$message?.success($t('common.deleteSuccess'));
+    onBatchDeleted();
+  }
 }
 
-function handleDelete(id: number) {
-  // request
-  console.log(id);
+async function handleDelete(id: number) {
+  const {error} = await fetchDeleteMenus([id]);
 
-  onDeleted();
+  if (!error) {
+    window.$message?.success($t('common.deleteSuccess'));
+    onDeleted();
+  }
 }
 
 /** the edit menu data or the parent menu data when adding a child menu */

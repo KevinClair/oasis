@@ -65,6 +65,14 @@ public interface UserDao {
     int insert(User user);
 
     /**
+     * 更新用户
+     *
+     * @param user 用户信息
+     * @return 影响行数
+     */
+    int update(User user);
+
+    /**
      * 查询用户列表（分页）
      *
      * @param request 查询参数

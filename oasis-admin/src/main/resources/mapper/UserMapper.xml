@@ -14,6 +14,8 @@
         <result column="email" property="email" jdbcType="VARCHAR"/>
         <result column="phone" property="phone" jdbcType="VARCHAR"/>
         <result column="status" property="status" jdbcType="BOOLEAN"/>
+        <result column="user_roles" property="userRoles" jdbcType="VARCHAR"
+                typeHandler="com.github.kevin.oasis.config.JsonTypeHandler"/>
         <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
         <result column="update_by" property="updateBy" jdbcType="VARCHAR"/>
@@ -22,7 +24,8 @@
 
     <!-- 基础字段 -->
     <sql id="Base_Column_List">
-        id, user_id, user_account, user_name, password, nick_name, user_gender, email, phone, status,
+        id
+        , user_id, user_account, user_name, password, nick_name, user_gender, email, phone, status, user_roles,
         create_by, create_time, update_by, update_time
     </sql>
 
@@ -72,10 +75,32 @@
     <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.User" useGeneratedKeys="true"
             keyProperty="id">
         INSERT INTO user (user_id, user_account, user_name, password, nick_name, user_gender, email, phone, status,
+                          user_roles,
                           create_by, create_time, update_by, update_time)
         VALUES (#{userId}, #{userAccount}, #{userName}, #{password}, #{nickName}, #{userGender}, #{email}, #{phone}, #{status},
+                #{userRoles, typeHandler=com.github.kevin.oasis.config.JsonTypeHandler},
                 #{createBy}, NOW(), #{updateBy}, NOW())
     </insert>
+
+    <!-- 更新用户 -->
+    <update id="update" parameterType="com.github.kevin.oasis.models.entity.User">
+        UPDATE user
+        SET user_id = #{userId},
+        user_account = #{userAccount},
+        user_name = #{userName},
+        <if test="password != null and password != ''">
+            password = #{password},
+        </if>
+        nick_name = #{nickName},
+        user_gender = #{userGender},
+        email = #{email},
+        phone = #{phone},
+        status = #{status},
+        user_roles = #{userRoles, typeHandler=com.github.kevin.oasis.config.JsonTypeHandler},
+        update_by = #{updateBy},
+        update_time = NOW()
+        WHERE id = #{id}
+    </update>
 
     <!-- 查询用户列表（分页） -->
     <select id="selectUserList" resultMap="BaseResultMap">

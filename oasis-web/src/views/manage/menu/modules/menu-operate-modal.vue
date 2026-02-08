@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import type { SelectOption } from 'naive-ui';
 import { enableStatusOptions, menuIconTypeOptions, menuTypeOptions } from '@/constants/business';
-import { fetchGetAllRoles } from '@/service/api';
+import {fetchGetAllRoles, fetchSaveMenu} from '@/service/api';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
 import { getLocalIcons } from '@/utils/icon';
 import { $t } from '@/locales';
@@ -54,32 +54,30 @@ const title = computed(() => {
   return titles[props.operateType];
 });
 
-type Model = Pick<
-  Api.SystemManage.Menu,
-  | 'menuType'
-  | 'menuName'
-  | 'routeName'
-  | 'routePath'
-  | 'component'
-  | 'order'
-  | 'i18nKey'
-  | 'icon'
-  | 'iconType'
-  | 'status'
-  | 'parentId'
-  | 'keepAlive'
-  | 'constant'
-  | 'href'
-  | 'hideInMenu'
-  | 'activeMenu'
-  | 'multiTab'
-  | 'fixedIndexInTab'
-> & {
-  query: NonNullable<Api.SystemManage.Menu['query']>;
-  buttons: NonNullable<Api.SystemManage.Menu['buttons']>;
+type Model = {
+  menuType: Api.SystemManage.MenuType;
+  menuName: string;
+  routeName: string;
+  routePath: string;
+  pathParam: string;
+  component: string;
+  order: number;
+  i18nKey: App.I18n.I18nKey | null;
+  icon: string;
+  iconType: Api.SystemManage.IconType;
+  parentId: number;
+  status: Api.Common.EnableStatus | null;
+  keepAlive: boolean | null;
+  constant: boolean | null;
+  href: string | null;
+  hideInMenu: boolean | null;
+  activeMenu: string | null;
+  multiTab: boolean | null;
+  fixedIndexInTab: number | null;
+  query: Array<{ key: string; value: string }>;
+  buttons: Array<{ code: string; desc: string }>;
   layout: string;
   page: string;
-  pathParam: string;
 };
 
 const model = ref(createDefaultModel());
@@ -99,13 +97,13 @@ function createDefaultModel(): Model {
     iconType: '1',
     parentId: 0,
     status: '1',
-    keepAlive: false,
-    constant: false,
+    keepAlive: null,
+    constant: null,
     order: 0,
     href: null,
-    hideInMenu: false,
+    hideInMenu: null,
     activeMenu: null,
-    multiTab: false,
+    multiTab: null,
     fixedIndexInTab: null,
     query: [],
     buttons: []
@@ -254,12 +252,26 @@ async function handleSubmit() {
 
   const params = getSubmitParams();
 
-  console.log('params: ', params);
+  // 转换Boolean类型的status
+  const submitData: Api.SystemManage.MenuEdit = {
+    ...params,
+    id: props.operateType === 'edit' ? props.rowData?.id : undefined,
+    menuType: params.menuType as Api.SystemManage.MenuType,
+    iconType: params.iconType as Api.SystemManage.IconType,
+    status: params.status === '1',
+    keepAlive: params.keepAlive || false,
+    constant: params.constant || false,
+    hideInMenu: params.hideInMenu || false,
+    multiTab: params.multiTab || false
+  };
 
-  // request
-  window.$message?.success($t('common.updateSuccess'));
-  closeDrawer();
-  emit('submitted');
+  const {error} = await fetchSaveMenu(submitData);
+
+  if (!error) {
+    window.$message?.success($t('common.updateSuccess'));
+    closeDrawer();
+    emit('submitted');
+  }
 }
 
 watch(visible, () => {
@@ -415,7 +427,7 @@ watch(
               <template #action="{ index, create, remove }">
                 <NSpace class="ml-12px">
                   <NButton size="medium" @click="() => create(index)">
-                    <icon-ic:round-plus class="text-icon" />
+                    <icon-ic-round-plus class="text-icon"/>
                   </NButton>
                   <NButton size="medium" @click="() => remove(index)">
                     <icon-ic-round-remove class="text-icon" />
@@ -443,7 +455,7 @@ watch(
               <template #action="{ index, create, remove }">
                 <NSpace class="ml-12px">
                   <NButton size="medium" @click="() => create(index)">
-                    <icon-ic:round-plus class="text-icon" />
+                    <icon-ic-round-plus class="text-icon"/>
                   </NButton>
                   <NButton size="medium" @click="() => remove(index)">
                     <icon-ic-round-remove class="text-icon" />
