@@ -1,16 +1,16 @@
 <script setup lang="tsx">
-import { ref } from 'vue';
-import type { Ref } from 'vue';
-import { NButton, NPopconfirm, NTag } from 'naive-ui';
-import { useBoolean } from '@sa/hooks';
-import { yesOrNoRecord } from '@/constants/common';
+import type {Ref} from 'vue';
+import {ref} from 'vue';
+import {NButton, NPopconfirm, NTag} from 'naive-ui';
+import {useBoolean} from '@sa/hooks';
+import {yesOrNoRecord} from '@/constants/common';
 import {menuTypeRecord} from '@/constants/business';
 import {fetchDeleteMenus, fetchGetAllPages, fetchGetMenuList} from '@/service/api';
-import { useAppStore } from '@/store/modules/app';
-import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
-import { $t } from '@/locales';
+import {useAppStore} from '@/store/modules/app';
+import {defaultTransform, useNaivePaginatedTable, useTableOperate} from '@/hooks/common/table';
+import {$t} from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
-import MenuOperateModal, { type OperateType } from './modules/menu-operate-modal.vue';
+import MenuOperateModal, {type OperateType} from './modules/menu-operate-modal.vue';
 
 const appStore = useAppStore();
 
@@ -145,7 +145,7 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
       width: 230,
       render: row => (
         <div class="flex-center justify-end gap-8px">
-          {row.menuType === '1' && (
+          {row.menuType === 1 && (
             <NButton type="primary" ghost size="small" onClick={() => handleAddChildMenu(row)}>
               {$t('page.manage.menu.addChildMenu')}
             </NButton>

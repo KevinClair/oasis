@@ -113,9 +113,9 @@ public class MenuVO {
     private Boolean multiTab;
 
     /**
-     * 固定在tab卡上
+     * 固定在tab卡上的索引位置
      */
-    private Boolean fixedIndexInTab;
+    private Integer fixedIndexInTab;
 
     /**
      * 状态

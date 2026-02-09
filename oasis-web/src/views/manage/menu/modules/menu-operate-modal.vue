@@ -1,11 +1,11 @@
 <script setup lang="tsx">
-import { computed, ref, watch } from 'vue';
-import type { SelectOption } from 'naive-ui';
-import { enableStatusOptions, menuIconTypeOptions, menuTypeOptions } from '@/constants/business';
+import {computed, ref, watch} from 'vue';
+import type {SelectOption} from 'naive-ui';
+import {enableStatusOptions, menuIconTypeOptions, menuTypeOptions} from '@/constants/business';
 import {fetchGetAllRoles, fetchSaveMenu} from '@/service/api';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import { getLocalIcons } from '@/utils/icon';
-import { $t } from '@/locales';
+import {useFormRules, useNaiveForm} from '@/hooks/common/form';
+import {getLocalIcons} from '@/utils/icon';
+import {$t} from '@/locales';
 import SvgIcon from '@/components/custom/svg-icon.vue';
 import {
   getLayoutAndPage,
@@ -84,7 +84,7 @@ const model = ref(createDefaultModel());
 
 function createDefaultModel(): Model {
   return {
-    menuType: '1',
+    menuType: 1,
     menuName: '',
     routeName: '',
     routePath: '',
@@ -97,13 +97,13 @@ function createDefaultModel(): Model {
     iconType: '1',
     parentId: 0,
     status: '1',
-    keepAlive: null,
-    constant: null,
+    keepAlive: false,
+    constant: false,
     order: 0,
     href: null,
-    hideInMenu: null,
+    hideInMenu: false,
     activeMenu: null,
-    multiTab: null,
+    multiTab: false,
     fixedIndexInTab: null,
     query: [],
     buttons: []
@@ -134,7 +134,7 @@ const localIconOptions = localIcons.map<SelectOption>(item => ({
 
 const showLayout = computed(() => model.value.parentId === 0);
 
-const showPage = computed(() => model.value.menuType === '2');
+const showPage = computed(() => model.value.menuType === 2);
 
 const pageOptions = computed(() => {
   const allPages = [...props.allPages];
@@ -252,17 +252,27 @@ async function handleSubmit() {
 
   const params = getSubmitParams();
 
-  // 转换Boolean类型的status
+  // 转换类型以匹配MenuEdit接口
   const submitData: Api.SystemManage.MenuEdit = {
-    ...params,
     id: props.operateType === 'edit' ? props.rowData?.id : undefined,
-    menuType: params.menuType as Api.SystemManage.MenuType,
-    iconType: params.iconType as Api.SystemManage.IconType,
-    status: params.status === '1',
+    parentId: params.parentId,
+    menuType: params.menuType,
+    menuName: params.menuName,
+    routeName: params.routeName,
+    routePath: params.routePath,
+    component: params.component,
+    iconType: params.iconType,
+    icon: params.icon,
+    i18nKey: params.i18nKey || undefined,
+    order: params.order,
     keepAlive: params.keepAlive || false,
     constant: params.constant || false,
+    href: params.href || undefined,
     hideInMenu: params.hideInMenu || false,
-    multiTab: params.multiTab || false
+    activeMenu: params.activeMenu || undefined,
+    multiTab: params.multiTab || false,
+    fixedIndexInTab: params.fixedIndexInTab || undefined,
+    status: params.status === '1'
   };
 
   const {error} = await fetchSaveMenu(submitData);

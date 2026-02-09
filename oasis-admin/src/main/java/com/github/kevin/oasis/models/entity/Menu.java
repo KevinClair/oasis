@@ -114,7 +114,7 @@ public class Menu {
     /**
      * 固定在tab卡上的索引位置
      */
-    private Boolean fixedIndexInTab;
+    private Integer fixedIndexInTab;
 
     /**
      * 状态：true-启用，false-禁用

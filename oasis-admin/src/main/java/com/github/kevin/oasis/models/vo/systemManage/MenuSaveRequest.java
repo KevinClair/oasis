@@ -112,7 +112,7 @@ public class MenuSaveRequest {
     /**
      * 固定在tab卡上
      */
-    private Boolean fixedIndexInTab;
+    private Integer fixedIndexInTab;
 
     /**
      * 状态
