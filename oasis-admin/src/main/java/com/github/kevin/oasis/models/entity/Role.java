@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 角色实体类
@@ -40,6 +41,11 @@ public class Role {
      * 状态：true-启用，false-禁用
      */
     private Boolean status;
+
+    /**
+     * 角色可访问的路由列表（路由路径数组）
+     */
+    private List<String> roleRoutes;
 
     /**
      * 创建人
