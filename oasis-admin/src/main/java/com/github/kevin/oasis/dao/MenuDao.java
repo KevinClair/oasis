@@ -13,11 +13,18 @@ import java.util.List;
 public interface MenuDao {
 
     /**
-     * 查询所有菜单列表
+     * 查询所有常量菜单列表
      *
      * @return 菜单列表
      */
-    List<Menu> selectAllMenus();
+    List<Menu> selectConstantMenus();
+
+    /**
+     * 查询所有非常量菜单列表
+     *
+     * @return 菜单列表
+     */
+    List<Menu> selectNotConstantMenus();
 
     /**
      * 根据ID查询菜单

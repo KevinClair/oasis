@@ -3,6 +3,7 @@ package com.github.kevin.oasis.services.impl;
 import com.github.kevin.oasis.common.BusinessException;
 import com.github.kevin.oasis.common.ResponseStatusEnums;
 import com.github.kevin.oasis.dao.MenuDao;
+import com.github.kevin.oasis.dao.RoleMenuDao;
 import com.github.kevin.oasis.models.entity.Menu;
 import com.github.kevin.oasis.models.vo.systemManage.*;
 import com.github.kevin.oasis.services.MenuManageService;
@@ -23,13 +24,14 @@ import java.util.stream.Collectors;
 public class MenuManageServiceImpl implements MenuManageService {
 
     private final MenuDao menuDao;
+    private final RoleMenuDao roleMenuDao;
 
     @Override
     public MenuListResponse getMenuList() {
         log.info("查询菜单列表");
 
         // 查询所有菜单
-        List<Menu> allMenus = menuDao.selectAllMenus();
+        List<Menu> allMenus = menuDao.selectNotConstantMenus();
 
         // 转换为VO并构建树形结构
         List<MenuVO> menuVOList = buildMenuTree(allMenus);
@@ -224,12 +226,36 @@ public class MenuManageServiceImpl implements MenuManageService {
             }
         }
 
+        // 先删除角色菜单关联
+        roleMenuDao.deleteByMenuIds(request.getIds());
+        log.info("删除菜单关联成功，菜单ID列表：{}", request.getIds());
+
         // 批量删除菜单
         int deletedCount = menuDao.deleteMenusByIds(request.getIds());
 
         log.info("删除菜单成功，删除数量：{}", deletedCount);
 
         return deletedCount;
+    }
+
+    @Override
+    public List<String> getAllPages() {
+        log.info("获取所有菜单路由路径");
+
+        // 查询所有菜单
+        List<Menu> allMenus = menuDao.selectNotConstantMenus();
+
+        // 提取所有路由路径并平铺返回
+        List<String> pages = allMenus.stream()
+                .filter(menu -> menu.getRoutePath() != null && !menu.getRoutePath().isEmpty())
+                .map(Menu::getRouteName)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+
+        log.info("获取所有菜单路由路径成功，数量：{}", pages.size());
+
+        return pages;
     }
 }
 

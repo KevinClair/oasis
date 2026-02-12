@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, shallowRef, watch } from 'vue';
-import { fetchGetAllPages, fetchGetMenuTree } from '@/service/api';
+import { computed, ref, watch } from 'vue';
+import type { TreeOption } from 'naive-ui';
+import { fetchGetMenuList, fetchGetRoleMenuIds, fetchSaveRoleMenus } from '@/service/api';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -24,102 +25,125 @@ function closeModal() {
 
 const title = computed(() => $t('common.edit') + $t('page.manage.role.menuAuth'));
 
-const home = shallowRef('');
+// 选中的菜单ID列表
+const checkedKeys = ref<number[]>([]);
 
-async function getHome() {
-  console.log(props.roleId);
+// 菜单树数据
+const menuTreeData = ref<TreeOption[]>([]);
 
-  home.value = 'home';
+// 加载状态
+const loading = ref(false);
+
+// 保存加载状态
+const saveLoading = ref(false);
+
+/**
+ * 将菜单列表转换为树形结构
+ */
+function convertToTree(menus: Api.SystemManage.Menu[]): TreeOption[] {
+  return menus.map(menu => {
+    const node: TreeOption = {
+      key: menu.id,
+      label: menu.menuName,
+      children: menu.children && menu.children.length > 0 ? convertToTree(menu.children) : undefined
+    };
+    return node;
+  });
 }
 
-async function updateHome(val: string) {
-  // request
-
-  home.value = val;
-}
-
-const pages = shallowRef<string[]>([]);
-
-async function getPages() {
-  const { error, data } = await fetchGetAllPages();
-
-  if (!error) {
-    pages.value = data;
+/**
+ * 获取菜单树数据
+ */
+async function getMenuTree() {
+  loading.value = true;
+  try {
+    const { data, error } = await fetchGetMenuList();
+    if (!error && data) {
+      menuTreeData.value = convertToTree(data.records || []);
+    }
+  } finally {
+    loading.value = false;
   }
 }
 
-const pageSelectOptions = computed(() => {
-  const opts: CommonType.Option[] = pages.value.map(page => ({
-    label: page,
-    value: page
-  }));
+/**
+ * 获取角色已选中的菜单ID
+ */
+async function getRoleMenus() {
+  if (props.roleId <= 0) {
+    return;
+  }
 
-  return opts;
-});
-
-const tree = shallowRef<Api.SystemManage.MenuTree[]>([]);
-
-async function getTree() {
-  const { error, data } = await fetchGetMenuTree();
-
-  if (!error) {
-    tree.value = data;
+  loading.value = true;
+  try {
+    const { data, error } = await fetchGetRoleMenuIds(props.roleId);
+    if (!error && data) {
+      checkedKeys.value = data;
+    }
+  } finally {
+    loading.value = false;
   }
 }
 
-const checks = shallowRef<number[]>([]);
+/**
+ * 保存菜单权限
+ */
+async function handleSave() {
+  saveLoading.value = true;
+  try {
+    const { error } = await fetchSaveRoleMenus({
+      roleId: props.roleId,
+      menuIds: checkedKeys.value
+    });
 
-async function getChecks() {
-  console.log(props.roleId);
-  // request
-  checks.value = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21];
+    if (!error) {
+      window.$message?.success($t('common.updateSuccess'));
+      closeModal();
+    }
+  } finally {
+    saveLoading.value = false;
+  }
 }
 
-function handleSubmit() {
-  console.log(checks.value, props.roleId);
-  // request
-
-  window.$message?.success?.($t('common.modifySuccess'));
-
-  closeModal();
-}
-
-function init() {
-  getHome();
-  getPages();
-  getTree();
-  getChecks();
-}
-
-watch(visible, val => {
-  if (val) {
-    init();
+// 监听弹窗显示状态
+watch(visible, newVal => {
+  if (newVal) {
+    // 弹窗打开时加载数据
+    getMenuTree();
+    getRoleMenus();
+  } else {
+    // 弹窗关闭时清空数据
+    checkedKeys.value = [];
+    menuTreeData.value = [];
   }
 });
 </script>
 
 <template>
-  <NModal v-model:show="visible" :title="title" preset="card" class="w-480px">
-    <div class="flex-y-center gap-16px pb-12px">
-      <div>{{ $t('page.manage.menu.home') }}</div>
-      <NSelect :value="home" :options="pageSelectOptions" size="small" class="w-160px" @update:value="updateHome" />
-    </div>
-    <NTree
-      v-model:checked-keys="checks"
-      :data="tree"
-      key-field="id"
-      checkable
-      expand-on-click
-      virtual-scroll
-      block-line
-      class="h-280px"
-    />
+  <NModal v-model:show="visible" :title="title" preset="card" class="w-700px">
+    <NSpin :show="loading">
+      <div class="flex-col gap-16px">
+        <div class="text-14px text-#666">
+          {{ $t('page.manage.role.form.menuAuth') }}
+        </div>
+        <NTree
+          v-model:checked-keys="checkedKeys"
+          :data="menuTreeData"
+          checkable
+          cascade
+          key-field="key"
+          label-field="label"
+          children-field="children"
+          :default-expand-all="true"
+          class="max-h-400px overflow-auto"
+        />
+      </div>
+    </NSpin>
+
     <template #footer>
       <NSpace justify="end">
-        <NButton size="small" class="mt-16px" @click="closeModal">
-          {{ $t('common.cancel') }}
-        </NButton>
-        <NButton type="primary" size="small" class="mt-16px" @click="handleSubmit">
+        <NButton @click="closeModal">{{ $t('common.cancel') }}</NButton>
+        <NButton type="primary" :loading="saveLoading" @click="handleSave">
           {{ $t('common.confirm') }}
         </NButton>
       </NSpace>
@@ -128,3 +152,4 @@ watch(visible, val => {
 </template>
 
 <style scoped></style>
+

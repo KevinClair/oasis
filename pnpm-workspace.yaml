@@ -1,0 +1,4 @@
+packages:
+  - "oasis-web"
+  - "oasis-web/packages/*"
+

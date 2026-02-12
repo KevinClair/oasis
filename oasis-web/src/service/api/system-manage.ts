@@ -56,6 +56,23 @@ export function fetchGetAllRoles() {
   });
 }
 
+/** get role menu ids */
+export function fetchGetRoleMenuIds(roleId: number) {
+  return request<number[]>({
+    url: `/systemManage/role/getRoleMenuIds/${roleId}`,
+    method: 'get'
+  });
+}
+
+/** save role menus */
+export function fetchSaveRoleMenus(data: { roleId: number; menuIds: number[] }) {
+  return request<number>({
+    url: '/systemManage/role/saveRoleMenus',
+    method: 'post',
+    data
+  });
+}
+
 /** get user list */
 export function fetchGetUserList(params?: Api.SystemManage.UserSearchParams) {
   return request<Api.SystemManage.UserList>({
@@ -149,3 +166,4 @@ export function fetchGetMenuTree() {
     method: 'get'
   });
 }
+

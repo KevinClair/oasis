@@ -326,6 +326,7 @@ const local: App.I18n.Schema = {
         roleCode: 'Role Code',
         roleStatus: 'Role Status',
         roleDesc: 'Role Description',
+        roleRoutes: 'Accessible Routes',
         menuAuth: 'Menu Auth',
         buttonAuth: 'Button Auth',
         enable: 'Enable',
@@ -337,7 +338,9 @@ const local: App.I18n.Schema = {
           roleName: 'Please enter role name',
           roleCode: 'Please enter role code',
           roleStatus: 'Please select role status',
-          roleDesc: 'Please enter role description'
+          roleDesc: 'Please enter role description',
+          roleRoutes: 'Please select accessible routes',
+          menuAuth: 'Please select menu permissions'
         },
         addRole: 'Add Role',
         editRole: 'Edit Role'

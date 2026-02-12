@@ -55,5 +55,21 @@ public interface RoleManageService {
      * @return 角色列表
      */
     List<RoleVO> getAllEnabledRoles();
+
+    /**
+     * 获取角色绑定的菜单ID列表
+     *
+     * @param roleId 角色ID
+     * @return 菜单ID列表
+     */
+    List<Long> getRoleMenuIds(Long roleId);
+
+    /**
+     * 保存角色菜单权限
+     *
+     * @param request 角色菜单权限保存请求
+     * @return 保存的记录数
+     */
+    int saveRoleMenus(RoleMenuSaveRequest request);
 }
 

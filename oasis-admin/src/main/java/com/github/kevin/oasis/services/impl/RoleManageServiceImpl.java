@@ -3,13 +3,17 @@ package com.github.kevin.oasis.services.impl;
 import com.github.kevin.oasis.common.BusinessException;
 import com.github.kevin.oasis.common.ResponseStatusEnums;
 import com.github.kevin.oasis.dao.RoleDao;
+import com.github.kevin.oasis.dao.RoleMenuDao;
 import com.github.kevin.oasis.models.entity.Role;
+import com.github.kevin.oasis.models.entity.RoleMenu;
 import com.github.kevin.oasis.models.vo.systemManage.*;
 import com.github.kevin.oasis.services.RoleManageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +26,7 @@ import java.util.stream.Collectors;
 public class RoleManageServiceImpl implements RoleManageService {
 
     private final RoleDao roleDao;
+    private final RoleMenuDao roleMenuDao;
 
     @Override
     public RoleListResponse getRoleList(RoleListRequest request) {
@@ -112,6 +117,7 @@ public class RoleManageServiceImpl implements RoleManageService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteRoles(RoleDeleteRequest request) {
         log.info("删除角色，参数：{}", request);
 
@@ -119,6 +125,9 @@ public class RoleManageServiceImpl implements RoleManageService {
             log.warn("删除角色失败：角色ID列表为空");
             return 0;
         }
+
+        // 先删除角色菜单关联
+        roleMenuDao.deleteByRoleIds(request.getIds());
 
         // 批量删除角色
         int deletedCount = roleDao.deleteRolesByIds(request.getIds());
@@ -194,6 +203,58 @@ public class RoleManageServiceImpl implements RoleManageService {
         log.info("查询所有启用角色成功，数量：{}", roleVOList.size());
 
         return roleVOList;
+    }
+
+    @Override
+    public List<Long> getRoleMenuIds(Long roleId) {
+        log.info("查询角色绑定的菜单ID列表，角色ID：{}", roleId);
+
+        List<Long> menuIds = roleMenuDao.selectMenuIdsByRoleId(roleId);
+
+        log.info("查询角色菜单成功，菜单数量：{}", menuIds.size());
+
+        return menuIds;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int saveRoleMenus(RoleMenuSaveRequest request) {
+        log.info("保存角色菜单权限，参数：{}", request);
+
+        Long roleId = request.getRoleId();
+        List<Long> menuIds = request.getMenuIds();
+
+        // 校验角色是否存在
+        Role role = roleDao.selectById(roleId);
+        if (role == null) {
+            throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "角色不存在");
+        }
+
+        // 先删除该角色的所有菜单关联
+        roleMenuDao.deleteByRoleId(roleId);
+
+        // 如果菜单ID列表为空，则不插入
+        if (menuIds == null || menuIds.isEmpty()) {
+            log.info("菜单ID列表为空，只删除旧关联");
+            return 0;
+        }
+
+        // 批量插入新的角色菜单关联
+        List<RoleMenu> roleMenuList = new ArrayList<>();
+        for (Long menuId : menuIds) {
+            RoleMenu roleMenu = RoleMenu.builder()
+                    .roleId(roleId)
+                    .menuId(menuId)
+                    .createBy("admin") // TODO: 从当前登录用户获取
+                    .build();
+            roleMenuList.add(roleMenu);
+        }
+
+        int count = roleMenuDao.batchInsert(roleMenuList);
+
+        log.info("保存角色菜单权限成功，插入数量：{}", count);
+
+        return count;
     }
 }
 

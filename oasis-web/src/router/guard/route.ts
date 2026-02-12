@@ -33,10 +33,16 @@ export function createRouteGuard(router: Router) {
 
     const isLogin = Boolean(localStg.get('token'));
     const needLogin = !to.meta.constant;
-    const routeRoles = to.meta.roles || [];
 
+    // In dynamic mode, backend already filters routes by permissions, so skip role checking
+    const authRouteMode = import.meta.env.VITE_AUTH_ROUTE_MODE;
+    const isDynamicMode = authRouteMode === 'dynamic';
+
+    const routeRoles = to.meta.roles || [];
     const hasRole = authStore.userInfo.roles.some(role => routeRoles.includes(role));
-    const hasAuth = authStore.isStaticSuper || !routeRoles.length || hasRole;
+    // In dynamic mode, if route exists in router, user has permission (backend filtered it)
+    // In static mode, check roles as before
+    const hasAuth = isDynamicMode ? true : authStore.isStaticSuper || !routeRoles.length || hasRole;
 
     // if it is login route when logged in, then switch to the root page
     if (to.name === loginRoute && isLogin) {

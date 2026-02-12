@@ -40,11 +40,21 @@
         create_by, create_time, update_by, update_time
     </sql>
 
-    <!-- 查询所有菜单列表 -->
-    <select id="selectAllMenus" resultMap="BaseResultMap">
+    <!-- 查询所有常量菜单列表 -->
+    <select id="selectConstantMenus" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
         FROM menu
+        WHERE constant = 1 AND status = 1
+        ORDER BY parent_id ASC, `order` ASC, create_time ASC
+    </select>
+
+    <!-- 查询所有非常量菜单列表 -->
+    <select id="selectNotConstantMenus" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM menu
+        WHERE constant = 0 AND status = 1
         ORDER BY parent_id ASC, `order` ASC, create_time ASC
     </select>
 

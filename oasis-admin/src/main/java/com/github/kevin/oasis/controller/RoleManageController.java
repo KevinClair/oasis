@@ -116,5 +116,37 @@ public class RoleManageController {
 
         return Response.success(roles);
     }
+
+    /**
+     * 获取角色绑定的菜单ID列表
+     *
+     * @param roleId 角色ID
+     * @return 菜单ID列表
+     */
+    @GetMapping("/getRoleMenuIds/{roleId}")
+    @Permission
+    public Response<List<Long>> getRoleMenuIds(@PathVariable Long roleId) {
+        log.info("收到获取角色菜单请求，角色ID：{}", roleId);
+
+        List<Long> menuIds = roleManageService.getRoleMenuIds(roleId);
+
+        return Response.success(menuIds);
+    }
+
+    /**
+     * 保存角色菜单权限
+     *
+     * @param request 角色菜单权限保存请求
+     * @return 成功响应
+     */
+    @PostMapping("/saveRoleMenus")
+    @Permission
+    public Response<Integer> saveRoleMenus(@Valid @RequestBody RoleMenuSaveRequest request) {
+        log.info("收到保存角色菜单权限请求，参数：{}", request);
+
+        int count = roleManageService.saveRoleMenus(request);
+
+        return Response.success(count);
+    }
 }
 

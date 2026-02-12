@@ -128,7 +128,7 @@ watch(visible, () => {
           <NInput v-model:value="model.roleName" :placeholder="$t('page.manage.role.form.roleName')" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleCode')" path="roleCode">
-          <NInput v-model:value="model.roleCode" :placeholder="$t('page.manage.role.form.roleCode')" />
+          <NInput v-model:value="model.roleCode" :placeholder="$t('page.manage.role.form.roleCode')" :disabled="isEdit" />
         </NFormItem>
         <NFormItem :label="$t('page.manage.role.roleStatus')" path="status">
           <NRadioGroup v-model:value="model.status">

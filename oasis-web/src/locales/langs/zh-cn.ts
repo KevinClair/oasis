@@ -322,6 +322,7 @@ const local: App.I18n.Schema = {
         roleCode: '角色编码',
         roleStatus: '角色状态',
         roleDesc: '角色描述',
+        roleRoutes: '可访问路由',
         menuAuth: '菜单权限',
         buttonAuth: '按钮权限',
         enable: '启用',
@@ -333,7 +334,9 @@ const local: App.I18n.Schema = {
           roleName: '请输入角色名称',
           roleCode: '请输入角色编码',
           roleStatus: '请选择角色状态',
-          roleDesc: '请输入角色描述'
+          roleDesc: '请输入角色描述',
+          roleRoutes: '请选择可访问的路由',
+          menuAuth: '请选择菜单权限'
         },
         addRole: '新增角色',
         editRole: '编辑角色'

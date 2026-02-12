@@ -1,0 +1,31 @@
+{
+  "name": "oasis-monorepo",
+  "version": "1.0.0",
+  "description": "Oasis Monorepo - A full-stack admin management system with Java backend and Vue3 frontend",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0",
+    "pnpm": ">=10.5.0"
+  },
+  "packageManager": "pnpm@10.5.0",
+  "scripts": {
+    "dev": "pnpm --filter oasis-web dev",
+    "dev:web": "pnpm --filter oasis-web dev",
+    "build:web": "pnpm --filter oasis-web build",
+    "lint:web": "pnpm --filter oasis-web lint",
+    "typecheck:web": "pnpm --filter oasis-web typecheck",
+    "install:web": "cd oasis-web && pnpm install"
+  },
+  "workspaces": [
+    "oasis-web",
+    "oasis-web/packages/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/oasis.git"
+  },
+  "author": "",
+  "license": "MIT"
+}
+

@@ -2,6 +2,8 @@ package com.github.kevin.oasis.services;
 
 import com.github.kevin.oasis.models.vo.systemManage.*;
 
+import java.util.List;
+
 /**
  * 菜单管理服务接口
  */
@@ -37,5 +39,12 @@ public interface MenuManageService {
      * @return 删除的记录数
      */
     int deleteMenus(MenuDeleteRequest request);
+
+    /**
+     * 获取所有菜单的路由路径（平铺）
+     *
+     * @return 路由路径列表
+     */
+    List<String> getAllPages();
 }
 
