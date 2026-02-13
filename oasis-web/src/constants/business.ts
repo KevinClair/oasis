@@ -21,11 +21,15 @@ export const userGenderRecord: Record<Api.SystemManage.UserGender, App.I18n.I18n
 export const userGenderOptions = transformRecordToOption(userGenderRecord);
 
 export const menuTypeRecord: Record<Api.SystemManage.MenuType, App.I18n.I18nKey> = {
-  '1': 'page.manage.menu.type.directory',
-  '2': 'page.manage.menu.type.menu'
+  1: 'page.manage.menu.type.directory',
+  2: 'page.manage.menu.type.menu'
 };
 
-export const menuTypeOptions = transformRecordToOption(menuTypeRecord);
+// Create options with number values manually (Object.entries converts number keys to strings)
+export const menuTypeOptions: CommonType.Option<Api.SystemManage.MenuType, App.I18n.I18nKey>[] = [
+  { value: 1, label: 'page.manage.menu.type.directory' },
+  { value: 2, label: 'page.manage.menu.type.menu' }
+];
 
 export const menuIconTypeRecord: Record<Api.SystemManage.IconType, App.I18n.I18nKey> = {
   '1': 'page.manage.menu.iconType.iconify',

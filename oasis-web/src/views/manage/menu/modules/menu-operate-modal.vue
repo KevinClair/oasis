@@ -190,12 +190,22 @@ function handleInitModel() {
   }
 
   if (props.operateType === 'edit') {
-    const { component, ...rest } = props.rowData;
+    const { component, status, ...rest } = props.rowData;
 
     const { layout, page } = getLayoutAndPage(component);
     const { path, param } = getPathParamFromRoutePath(rest.routePath);
 
-    Object.assign(model.value, rest, { layout, page, routePath: path, pathParam: param });
+    // Convert backend data types to match frontend radio options
+    // status: boolean (true/false) -> string ('1' or '2') for radio options
+    const convertedStatus = status ? '1' : '2';
+
+    Object.assign(model.value, rest, {
+      status: convertedStatus as Api.Common.EnableStatus,
+      layout,
+      page,
+      routePath: path,
+      pathParam: param
+    });
   }
 
   if (!model.value.query) {

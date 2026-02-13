@@ -225,5 +225,44 @@ declare namespace Api {
       pId: number;
       children?: MenuTree[];
     };
+
+    /**
+     * announcement type
+     *
+     * - "normal": normal
+     * - "warning": warning
+     * - "important": important notice
+     */
+    type AnnouncementType = 'normal' | 'warning' | 'important';
+
+    /** announcement */
+    type Announcement = Common.CommonRecord<{
+      /** announcement title */
+      title: string;
+      /** announcement content */
+      content: string;
+      /** announcement type */
+      type: AnnouncementType;
+    }>;
+
+    /** announcement search params */
+    type AnnouncementSearchParams = CommonType.RecordNullable<
+      Pick<Api.SystemManage.Announcement, 'title' | 'type'> & CommonSearchParams
+    >;
+
+    /** announcement list */
+    type AnnouncementList = Common.PaginatingQueryRecord<Announcement>;
+
+    /** announcement edit */
+    type AnnouncementEdit = {
+      /** announcement id (required for edit) */
+      id?: number;
+      /** announcement title */
+      title: string;
+      /** announcement content */
+      content: string;
+      /** announcement type */
+      type: AnnouncementType;
+    };
   }
 }

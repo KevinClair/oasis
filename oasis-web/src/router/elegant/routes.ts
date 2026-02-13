@@ -87,6 +87,15 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
+        name: 'manage_announcement',
+        path: '/manage/announcement',
+        component: 'view.manage_announcement',
+        meta: {
+          title: 'manage_announcement',
+          i18nKey: 'route.manage_announcement'
+        }
+      },
+      {
         name: 'manage_menu',
         path: '/manage/menu',
         component: 'view.manage_menu',

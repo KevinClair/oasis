@@ -483,6 +483,7 @@ declare namespace App {
         login: {
           common: {
             loginOrRegister: string;
+            userPlaceholder: string;
             userNamePlaceholder: string;
             phonePlaceholder: string;
             codePlaceholder: string;
@@ -567,28 +568,48 @@ declare namespace App {
             roleCode: string;
             roleStatus: string;
             roleDesc: string;
+            roleRoutes: string;
             form: {
               roleName: string;
               roleCode: string;
               roleStatus: string;
               roleDesc: string;
+              roleRoutes: string;
+              menuAuth: string;
             };
             addRole: string;
             editRole: string;
             menuAuth: string;
             buttonAuth: string;
+            enable: string;
+            disable: string;
+            confirmEnable: string;
+            confirmDisable: string;
+            batchToggleStatus: string;
           };
           user: {
             title: string;
+            userId: string;
+            userAccount: string;
             userName: string;
+            password: string;
             userGender: string;
             nickName: string;
             userPhone: string;
             userEmail: string;
             userStatus: string;
             userRole: string;
+            enable: string;
+            disable: string;
+            confirmEnable: string;
+            confirmDisable: string;
+            batchToggleStatus: string;
             form: {
+              userId: string;
+              userAccount: string;
               userName: string;
+              password: string;
+              passwordEdit: string;
               userGender: string;
               nickName: string;
               userPhone: string;
@@ -669,6 +690,29 @@ declare namespace App {
             iconType: {
               iconify: string;
               local: string;
+            };
+          };
+          announcement: {
+            title: string;
+            id: string;
+            announcementTitle: string;
+            announcementContent: string;
+            announcementType: string;
+            createBy: string;
+            createTime: string;
+            updateBy: string;
+            updateTime: string;
+            form: {
+              title: string;
+              content: string;
+              type: string;
+            };
+            addAnnouncement: string;
+            editAnnouncement: string;
+            type: {
+              normal: string;
+              warning: string;
+              important: string;
             };
           };
         };

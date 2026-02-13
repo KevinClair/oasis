@@ -234,7 +234,8 @@ const local: App.I18n.Schema = {
     manage_user: 'User Manage',
     'manage_user-detail': 'User Detail',
     manage_role: 'Role Manage',
-    manage_menu: 'Menu Manage'
+    manage_menu: 'Menu Manage',
+    manage_announcement: 'Announcement Manage'
   },
   page: {
     login: {
@@ -448,6 +449,29 @@ const local: App.I18n.Schema = {
         iconType: {
           iconify: 'Iconify Icon',
           local: 'Local Icon'
+        }
+      },
+      announcement: {
+        title: 'Announcement List',
+        id: 'ID',
+        announcementTitle: 'Title',
+        announcementContent: 'Content',
+        announcementType: 'Type',
+        createBy: 'Created By',
+        createTime: 'Create Time',
+        updateBy: 'Updated By',
+        updateTime: 'Update Time',
+        form: {
+          title: 'Please enter announcement title',
+          content: 'Please enter announcement content',
+          type: 'Please select announcement type'
+        },
+        addAnnouncement: 'Add Announcement',
+        editAnnouncement: 'Edit Announcement',
+        type: {
+          normal: 'Normal',
+          warning: 'Warning',
+          important: 'Important Notice'
         }
       }
     }

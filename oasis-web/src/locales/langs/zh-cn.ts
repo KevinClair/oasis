@@ -230,7 +230,8 @@ const local: App.I18n.Schema = {
     manage_user: '用户管理',
     'manage_user-detail': '用户详情',
     manage_role: '角色管理',
-    manage_menu: '菜单管理'
+    manage_menu: '菜单管理',
+    manage_announcement: '公告管理'
   },
   page: {
     login: {
@@ -444,6 +445,29 @@ const local: App.I18n.Schema = {
         iconType: {
           iconify: 'iconify图标',
           local: '本地图标'
+        }
+      },
+      announcement: {
+        title: '公告列表',
+        id: 'ID',
+        announcementTitle: '公告标题',
+        announcementContent: '公告内容',
+        announcementType: '公告类型',
+        createBy: '创建人',
+        createTime: '创建时间',
+        updateBy: '修改人',
+        updateTime: '修改时间',
+        form: {
+          title: '请输入公告标题',
+          content: '请输入公告内容',
+          type: '请选择公告类型'
+        },
+        addAnnouncement: '新增公告',
+        editAnnouncement: '编辑公告',
+        type: {
+          normal: '普通',
+          warning: '警告',
+          important: '重要通知'
         }
       }
     }

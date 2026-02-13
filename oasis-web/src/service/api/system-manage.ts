@@ -168,3 +168,46 @@ export function fetchGetMenuTree() {
   });
 }
 
+/** get announcement list */
+export function fetchGetAnnouncementList(params?: Api.SystemManage.AnnouncementSearchParams) {
+  return request<Api.SystemManage.AnnouncementList>({
+    url: '/systemManage/announcement/getAnnouncementList',
+    method: 'post',
+    data: params
+  });
+}
+
+/** save announcement (add/edit) */
+export function fetchSaveAnnouncement(data: Api.SystemManage.AnnouncementEdit) {
+  return request<number>({
+    url: '/systemManage/announcement/saveAnnouncement',
+    method: 'post',
+    data
+  });
+}
+
+/** get announcement by id */
+export function fetchGetAnnouncementById(id: number) {
+  return request<Api.SystemManage.Announcement>({
+    url: `/systemManage/announcement/getAnnouncementById/${id}`,
+    method: 'get'
+  });
+}
+
+/** get latest announcement */
+export function fetchGetLatestAnnouncement() {
+  return request<Api.SystemManage.Announcement>({
+    url: '/systemManage/announcement/getLatestAnnouncement',
+    method: 'get'
+  });
+}
+
+/** delete announcements (batch delete supported) */
+export function fetchDeleteAnnouncements(ids: number[]) {
+  return request<number>({
+    url: '/systemManage/announcement/deleteAnnouncements',
+    method: 'post',
+    data: { ids }
+  });
+}
+

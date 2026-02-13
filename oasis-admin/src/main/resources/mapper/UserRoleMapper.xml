@@ -27,11 +27,13 @@
         WHERE user_id = #{userId}
     </select>
 
-    <!-- 根据角色ID查询用户ID列表 -->
+    <!-- 根据角色ID查询用户ID列表（仅返回启用的用户） -->
     <select id="selectUserIdsByRoleId" parameterType="long" resultType="long">
-        SELECT user_id
-        FROM user_role
-        WHERE role_id = #{roleId}
+        SELECT ur.user_id
+        FROM user_role ur
+        INNER JOIN user u ON ur.user_id = u.id
+        WHERE ur.role_id = #{roleId}
+        AND u.status = 1
     </select>
 
     <!-- 根据用户ID删除用户角色关联 -->

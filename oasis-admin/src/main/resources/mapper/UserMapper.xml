@@ -68,7 +68,7 @@
         <include refid="Base_Column_List"/>
         FROM user
         WHERE (user_account = #{user} OR user_id = #{user}) AND password = #{password}
-        AND stauts = 1
+        AND status = 1
         LIMIT 1
     </select>
 

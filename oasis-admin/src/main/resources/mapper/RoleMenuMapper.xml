@@ -11,11 +11,13 @@
         <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
-    <!-- 根据角色ID查询菜单ID列表 -->
+    <!-- 根据角色ID查询菜单ID列表（仅返回启用的菜单） -->
     <select id="selectMenuIdsByRoleId" resultType="long">
-        SELECT menu_id
-        FROM role_menu
-        WHERE role_id = #{roleId}
+        SELECT rm.menu_id
+        FROM role_menu rm
+        INNER JOIN menu m ON rm.menu_id = m.id
+        WHERE rm.role_id = #{roleId}
+        AND m.status = 1
     </select>
 
     <!-- 根据角色ID删除角色菜单关联 -->
