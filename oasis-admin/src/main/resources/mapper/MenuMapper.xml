@@ -40,6 +40,22 @@
         create_by, create_time, update_by, update_time
     </sql>
 
+    <!-- 查询菜单列表（支持常量和状态筛选） -->
+    <select id="selectMenuList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM menu
+        <where>
+            <if test="request.constant != null">
+                AND constant = #{request.constant}
+            </if>
+            <if test="request.status != null">
+                AND status = #{request.status}
+            </if>
+        </where>
+        ORDER BY parent_id ASC, `order` ASC, create_time ASC
+    </select>
+
     <!-- 查询所有常量菜单列表 -->
     <select id="selectConstantMenus" resultMap="BaseResultMap">
         SELECT

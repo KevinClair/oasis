@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.UserRoleDao">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.UserRole">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="role_id" property="roleId" jdbcType="BIGINT"/>
+        <result column="create_by" property="createBy" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 根据用户ID查询角色ID列表（仅查询启用的角色） -->
+    <select id="selectRoleIdsByUserId" parameterType="long" resultType="long">
+        SELECT ur.role_id
+        FROM user_role ur
+        INNER JOIN role r ON ur.role_id = r.id
+        WHERE ur.user_id = #{userId}
+        AND r.status = 1
+    </select>
+
+    <!-- 根据用户ID查询所有角色ID列表（包括禁用的角色） -->
+    <select id="selectAllRoleIdsByUserId" parameterType="long" resultType="long">
+        SELECT role_id
+        FROM user_role
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 根据角色ID查询用户ID列表 -->
+    <select id="selectUserIdsByRoleId" parameterType="long" resultType="long">
+        SELECT user_id
+        FROM user_role
+        WHERE role_id = #{roleId}
+    </select>
+
+    <!-- 根据用户ID删除用户角色关联 -->
+    <delete id="deleteByUserId" parameterType="long">
+        DELETE FROM user_role
+        WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 根据角色ID删除用户角色关联 -->
+    <delete id="deleteByRoleId" parameterType="long">
+        DELETE FROM user_role
+        WHERE role_id = #{roleId}
+    </delete>
+
+    <!-- 批量插入用户角色关联 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO user_role (user_id, role_id, create_by, create_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId}, #{item.roleId}, #{item.createBy}, NOW())
+        </foreach>
+    </insert>
+
+    <!-- 根据用户ID列表删除用户角色关联 -->
+    <delete id="deleteByUserIds">
+        DELETE FROM user_role
+        WHERE user_id IN
+        <foreach collection="userIds" item="userId" open="(" separator="," close=")">
+            #{userId}
+        </foreach>
+    </delete>
+
+    <!-- 根据角色ID列表删除用户角色关联 -->
+    <delete id="deleteByRoleIds">
+        DELETE FROM user_role
+        WHERE role_id IN
+        <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+            #{roleId}
+        </foreach>
+    </delete>
+
+</mapper>
+

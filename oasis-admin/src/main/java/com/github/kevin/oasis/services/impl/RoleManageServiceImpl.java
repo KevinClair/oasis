@@ -4,6 +4,7 @@ import com.github.kevin.oasis.common.BusinessException;
 import com.github.kevin.oasis.common.ResponseStatusEnums;
 import com.github.kevin.oasis.dao.RoleDao;
 import com.github.kevin.oasis.dao.RoleMenuDao;
+import com.github.kevin.oasis.dao.UserRoleDao;
 import com.github.kevin.oasis.models.entity.Role;
 import com.github.kevin.oasis.models.entity.RoleMenu;
 import com.github.kevin.oasis.models.vo.systemManage.*;
@@ -27,6 +28,7 @@ public class RoleManageServiceImpl implements RoleManageService {
 
     private final RoleDao roleDao;
     private final RoleMenuDao roleMenuDao;
+    private final UserRoleDao userRoleDao;
 
     @Override
     public RoleListResponse getRoleList(RoleListRequest request) {
@@ -126,8 +128,13 @@ public class RoleManageServiceImpl implements RoleManageService {
             return 0;
         }
 
-        // 先删除角色菜单关联
-        roleMenuDao.deleteByRoleIds(request.getIds());
+        // 先删除用户角色关联
+        int deletedUserRoleCount = userRoleDao.deleteByRoleIds(request.getIds());
+        log.info("删除用户角色关联成功，删除数量：{}", deletedUserRoleCount);
+
+        // 删除角色菜单关联
+        int deletedRoleMenuCount = roleMenuDao.deleteByRoleIds(request.getIds());
+        log.info("删除角色菜单关联成功，删除数量：{}", deletedRoleMenuCount);
 
         // 批量删除角色
         int deletedCount = roleDao.deleteRolesByIds(request.getIds());

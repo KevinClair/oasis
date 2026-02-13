@@ -52,12 +52,13 @@ function convertToTree(menus: Api.SystemManage.Menu[]): TreeOption[] {
 }
 
 /**
- * 获取菜单树数据
+ * 获取菜单树数据（仅查询启用的非常量路由）
  */
 async function getMenuTree() {
   loading.value = true;
   try {
-    const { data, error } = await fetchGetMenuList();
+    // 只查询启用的非常量路由（constant=false, status=true）
+    const { data, error } = await fetchGetMenuList({ constant: false, status: true });
     if (!error && data) {
       menuTreeData.value = convertToTree(data.records || []);
     }

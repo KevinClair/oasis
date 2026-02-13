@@ -27,11 +27,11 @@ public class MenuManageServiceImpl implements MenuManageService {
     private final RoleMenuDao roleMenuDao;
 
     @Override
-    public MenuListResponse getMenuList() {
-        log.info("查询菜单列表");
+    public MenuListResponse getMenuList(MenuListRequest request) {
+        log.info("查询菜单列表，参数：{}", request);
 
-        // 查询所有菜单
-        List<Menu> allMenus = menuDao.selectNotConstantMenus();
+        // 查询菜单列表（根据参数筛选）
+        List<Menu> allMenus = menuDao.selectMenuList(request);
 
         // 转换为VO并构建树形结构
         List<MenuVO> menuVOList = buildMenuTree(allMenus);
@@ -43,7 +43,7 @@ public class MenuManageServiceImpl implements MenuManageService {
                 .records(menuVOList)
                 .build();
 
-        log.info("查询菜单列表成功，顶层菜单数量：{}", menuVOList.size());
+        log.info("查询菜单列表成功，顶层菜单数量：{}，总菜单数：{}", menuVOList.size(), allMenus.size());
 
         return response;
     }

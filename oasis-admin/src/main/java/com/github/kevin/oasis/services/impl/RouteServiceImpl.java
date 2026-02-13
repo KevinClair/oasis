@@ -4,6 +4,7 @@ import com.github.kevin.oasis.dao.MenuDao;
 import com.github.kevin.oasis.dao.RoleDao;
 import com.github.kevin.oasis.dao.RoleMenuDao;
 import com.github.kevin.oasis.dao.UserDao;
+import com.github.kevin.oasis.dao.UserRoleDao;
 import com.github.kevin.oasis.models.entity.Menu;
 import com.github.kevin.oasis.models.entity.Role;
 import com.github.kevin.oasis.models.entity.User;
@@ -30,6 +31,7 @@ public class RouteServiceImpl implements RouteService {
     private final UserDao userDao;
     private final RoleDao roleDao;
     private final RoleMenuDao roleMenuDao;
+    private final UserRoleDao userRoleDao;
 
     @Override
     public List<MenuRoute> getConstantRoutes() {
@@ -60,24 +62,30 @@ public class RouteServiceImpl implements RouteService {
                     .build();
         }
 
-        // 获取用户角色编码列表
-        List<String> userRoleCodes = user.getUserRoles();
-        if (userRoleCodes == null || userRoleCodes.isEmpty()) {
-            log.warn("用户没有分配角色，userId={}", userId);
+        // 从关联表查询用户的角色ID列表（只查询启用的角色）
+        List<Long> roleIds = userRoleDao.selectRoleIdsByUserId(userId);
+        if (roleIds == null || roleIds.isEmpty()) {
+            log.warn("用户没有分配角色或角色已禁用，userId={}", userId);
             return UserRouteResponse.builder()
                     .routes(new ArrayList<>())
                     .home("home")
                     .build();
         }
 
+        // 查询角色信息并获取角色编码（用于前端权限控制）
+        List<String> roleCodes = new ArrayList<>();
+        for (Long roleId : roleIds) {
+            Role role = roleDao.selectById(roleId);
+            if (role != null && role.getRoleCode() != null) {
+                roleCodes.add(role.getRoleCode());
+            }
+        }
+
         // 获取用户所有角色绑定的菜单ID
         Set<Long> menuIds = new HashSet<>();
-        for (String roleCode : userRoleCodes) {
-            Role role = roleDao.selectByRoleCode(roleCode);
-            if (role != null && role.getStatus() != null && role.getStatus()) {
-                List<Long> roleMenuIds = roleMenuDao.selectMenuIdsByRoleId(role.getId());
-                menuIds.addAll(roleMenuIds);
-            }
+        for (Long roleId : roleIds) {
+            List<Long> roleMenuIds = roleMenuDao.selectMenuIdsByRoleId(roleId);
+            menuIds.addAll(roleMenuIds);
         }
 
         if (menuIds.isEmpty()) {
@@ -104,7 +112,7 @@ public class RouteServiceImpl implements RouteService {
                 .collect(Collectors.toList());
 
         // 转换为MenuRoute格式并构建树形结构
-        List<MenuRoute> routes = buildMenuRouteTree(userMenus, userRoleCodes);
+        List<MenuRoute> routes = buildMenuRouteTree(userMenus, roleCodes);
 
         // 确定首页
         String home = "home"; // 默认首页

@@ -12,9 +12,10 @@ public interface MenuManageService {
     /**
      * 获取菜单列表（树形结构）
      *
+     * @param request 查询参数（常量数据筛选、状态筛选）
      * @return 菜单列表响应
      */
-    MenuListResponse getMenuList();
+    MenuListResponse getMenuList(MenuListRequest request);
 
     /**
      * 保存菜单（新增/编辑）

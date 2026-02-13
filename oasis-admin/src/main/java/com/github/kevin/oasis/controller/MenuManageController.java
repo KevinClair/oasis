@@ -23,14 +23,23 @@ public class MenuManageController {
     /**
      * 获取菜单列表（树形结构）
      *
+     * @param constant 常量数据筛选（可选）：null-全部，true-仅常量路由，false-仅动态路由
+     * @param status 状态筛选（可选）：null-全部，true-仅启用，false-仅禁用
      * @return 菜单列表响应
      */
     @GetMapping("/getMenuList")
     @Permission
-    public Response<MenuListResponse> getMenuList() {
-        log.info("收到获取菜单列表请求");
+    public Response<MenuListResponse> getMenuList(
+            @RequestParam(required = false) Boolean constant,
+            @RequestParam(required = false) Boolean status) {
+        log.info("收到获取菜单列表请求，常量筛选：{}，状态筛选：{}", constant, status);
 
-        MenuListResponse response = menuManageService.getMenuList();
+        MenuListRequest request = MenuListRequest.builder()
+                .constant(constant)
+                .status(status)
+                .build();
+
+        MenuListResponse response = menuManageService.getMenuList(request);
 
         return Response.success(response);
     }

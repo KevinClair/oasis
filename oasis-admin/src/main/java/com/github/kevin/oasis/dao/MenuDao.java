@@ -1,6 +1,7 @@
 package com.github.kevin.oasis.dao;
 
 import com.github.kevin.oasis.models.entity.Menu;
+import com.github.kevin.oasis.models.vo.systemManage.MenuListRequest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -11,6 +12,14 @@ import java.util.List;
  */
 @Mapper
 public interface MenuDao {
+
+    /**
+     * 查询菜单列表（支持常量和状态筛选）
+     *
+     * @param request 查询参数
+     * @return 菜单列表
+     */
+    List<Menu> selectMenuList(@Param("request") MenuListRequest request);
 
     /**
      * 查询所有常量菜单列表

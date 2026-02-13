@@ -2,13 +2,18 @@ package com.github.kevin.oasis.services.impl;
 
 import com.github.kevin.oasis.common.BusinessException;
 import com.github.kevin.oasis.common.ResponseStatusEnums;
+import com.github.kevin.oasis.dao.RoleDao;
 import com.github.kevin.oasis.dao.UserDao;
+import com.github.kevin.oasis.dao.UserRoleDao;
+import com.github.kevin.oasis.models.entity.Role;
 import com.github.kevin.oasis.models.entity.User;
+import com.github.kevin.oasis.models.entity.UserRole;
 import com.github.kevin.oasis.models.vo.systemManage.*;
 import com.github.kevin.oasis.services.UserManageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -24,6 +29,8 @@ import java.util.stream.Collectors;
 public class UserManageServiceImpl implements UserManageService {
 
     private final UserDao userDao;
+    private final UserRoleDao userRoleDao;
+    private final RoleDao roleDao;
 
     @Override
     public UserListResponse getUserList(UserListRequest request) {
@@ -43,8 +50,22 @@ public class UserManageServiceImpl implements UserManageService {
         Long total = userDao.countUserList(request);
 
         // 转换为VO
-        List<UserVO> userVOList = userList.stream().map(user ->
-            UserVO.builder()
+        List<UserVO> userVOList = userList.stream().map(user -> {
+            // 从关联表查询用户的角色ID列表（只查询启用的角色）
+            List<Long> roleIds = userRoleDao.selectRoleIdsByUserId(user.getId());
+
+            // 查询角色编码列表
+            List<String> roleCodes = new ArrayList<>();
+            if (roleIds != null && !roleIds.isEmpty()) {
+                for (Long roleId : roleIds) {
+                    Role role = roleDao.selectById(roleId);
+                    if (role != null && role.getRoleCode() != null) {
+                        roleCodes.add(role.getRoleCode());
+                    }
+                }
+            }
+
+            return UserVO.builder()
                     .id(user.getId())
                     .userId(user.getUserId())
                     .userAccount(user.getUserAccount())
@@ -54,13 +75,13 @@ public class UserManageServiceImpl implements UserManageService {
                     .userPhone(user.getPhone())
                     .userEmail(user.getEmail())
                     .status(user.getStatus())
-                    .userRoles(user.getUserRoles() != null ? user.getUserRoles() : new ArrayList<>())
+                    .userRoles(roleCodes)
                     .createBy(user.getCreateBy())
                     .createTime(user.getCreateTime())
                     .updateBy(user.getUpdateBy())
                     .updateTime(user.getUpdateTime())
-                    .build()
-        ).collect(Collectors.toList());
+                    .build();
+        }).collect(Collectors.toList());
 
         // 构建响应
         UserListResponse response = UserListResponse.builder()
@@ -76,6 +97,7 @@ public class UserManageServiceImpl implements UserManageService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public int deleteUsers(UserDeleteRequest request) {
         log.info("删除用户，参数：{}", request);
 
@@ -83,6 +105,10 @@ public class UserManageServiceImpl implements UserManageService {
             log.warn("删除用户失败：用户ID列表为空");
             return 0;
         }
+
+        // 先删除用户角色关联
+        int deletedRelationCount = userRoleDao.deleteByUserIds(request.getIds());
+        log.info("删除用户角色关联成功，删除数量：{}", deletedRelationCount);
 
         // 批量删除用户
         int deletedCount = userDao.deleteUsersByIds(request.getIds());
@@ -110,6 +136,7 @@ public class UserManageServiceImpl implements UserManageService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long saveUser(UserSaveRequest request) {
         log.info("保存用户，参数：{}", request);
 
@@ -145,12 +172,15 @@ public class UserManageServiceImpl implements UserManageService {
                     .email(request.getEmail())
                     .phone(request.getPhone())
                     .status(request.getStatus() != null ? request.getStatus() : true)
-                    .userRoles(request.getUserRoles())
                     .createBy("admin") // TODO: 从当前登录用户获取
                     .updateBy("admin")
                     .build();
 
             userDao.insert(user);
+
+            // 保存用户角色关联
+            saveUserRoles(user.getId(), request.getUserRoles());
+
             log.info("新增用户成功，用户ID：{}", user.getId());
             return user.getId();
         } else {
@@ -169,7 +199,6 @@ public class UserManageServiceImpl implements UserManageService {
             }
 
             // 注意：编辑用户时不允许修改工号（userId）
-            // user.setUserId(request.getUserId()); // 工号不可修改
             user.setUserAccount(request.getUserAccount());
             user.setUserName(request.getUserName());
             if (StringUtils.hasText(request.getPassword())) {
@@ -180,12 +209,47 @@ public class UserManageServiceImpl implements UserManageService {
             user.setEmail(request.getEmail());
             user.setPhone(request.getPhone());
             user.setStatus(request.getStatus());
-            user.setUserRoles(request.getUserRoles());
             user.setUpdateBy("admin"); // TODO: 从当前登录用户获取
 
             userDao.update(user);
+
+            // 更新用户角色关联（先删除后新增）
+            userRoleDao.deleteByUserId(user.getId());
+            saveUserRoles(user.getId(), request.getUserRoles());
+
             log.info("更新用户成功，用户ID：{}", user.getId());
             return user.getId();
+        }
+    }
+
+    /**
+     * 保存用户角色关联
+     */
+    private void saveUserRoles(Long userId, List<String> roleCodes) {
+        if (roleCodes == null || roleCodes.isEmpty()) {
+            log.info("用户没有分配角色，userId={}", userId);
+            return;
+        }
+
+        // 根据角色编码查询角色ID
+        List<UserRole> userRoleList = new ArrayList<>();
+        for (String roleCode : roleCodes) {
+            Role role = roleDao.selectByRoleCode(roleCode);
+            if (role != null) {
+                UserRole userRole = UserRole.builder()
+                        .userId(userId)
+                        .roleId(role.getId())
+                        .createBy("admin") // TODO: 从当前登录用户获取
+                        .build();
+                userRoleList.add(userRole);
+            } else {
+                log.warn("角色不存在，roleCode={}", roleCode);
+            }
+        }
+
+        if (!userRoleList.isEmpty()) {
+            userRoleDao.batchInsert(userRoleList);
+            log.info("保存用户角色关联成功，userId={}，角色数量={}", userId, userRoleList.size());
         }
     }
 
@@ -198,6 +262,20 @@ public class UserManageServiceImpl implements UserManageService {
             throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "用户不存在");
         }
 
+        // 从关联表查询用户的所有角色ID列表（包括禁用的角色，用于编辑时回显）
+        List<Long> roleIds = userRoleDao.selectAllRoleIdsByUserId(user.getId());
+
+        // 查询角色编码列表
+        List<String> roleCodes = new ArrayList<>();
+        if (roleIds != null && !roleIds.isEmpty()) {
+            for (Long roleId : roleIds) {
+                Role role = roleDao.selectById(roleId);
+                if (role != null && role.getRoleCode() != null) {
+                    roleCodes.add(role.getRoleCode());
+                }
+            }
+        }
+
         UserVO userVO = UserVO.builder()
                 .id(user.getId())
                 .userId(user.getUserId())
@@ -208,7 +286,7 @@ public class UserManageServiceImpl implements UserManageService {
                 .userPhone(user.getPhone())
                 .userEmail(user.getEmail())
                 .status(user.getStatus())
-                .userRoles(user.getUserRoles() != null ? user.getUserRoles() : new ArrayList<>())
+                .userRoles(roleCodes)
                 .createBy(user.getCreateBy())
                 .createTime(user.getCreateTime())
                 .updateBy(user.getUpdateBy())
