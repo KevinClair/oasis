@@ -1,7 +1,6 @@
 package com.github.kevin.oasis.dao;
 
 import com.github.kevin.oasis.models.entity.Menu;
-import com.github.kevin.oasis.models.vo.systemManage.MenuListRequest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -16,24 +15,11 @@ public interface MenuDao {
     /**
      * 查询菜单列表（支持常量和状态筛选）
      *
-     * @param request 查询参数
+     * @param constant 常量数据筛选：null-全部，true-仅常量路由，false-仅动态路由
+     * @param status 状态筛选：null-全部，true-仅启用，false-仅禁用
      * @return 菜单列表
      */
-    List<Menu> selectMenuList(@Param("request") MenuListRequest request);
-
-    /**
-     * 查询所有常量菜单列表
-     *
-     * @return 菜单列表
-     */
-    List<Menu> selectConstantMenus();
-
-    /**
-     * 查询所有非常量菜单列表
-     *
-     * @return 菜单列表
-     */
-    List<Menu> selectNotConstantMenus();
+    List<Menu> selectMenuList(@Param("constant") Boolean constant, @Param("status") Boolean status);
 
     /**
      * 根据ID查询菜单

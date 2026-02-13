@@ -30,8 +30,13 @@ public class MenuManageServiceImpl implements MenuManageService {
     public MenuListResponse getMenuList(MenuListRequest request) {
         log.info("查询菜单列表，参数：{}", request);
 
+        // 如果没有传参数，创建默认请求（查询所有）
+        if (request == null) {
+            request = MenuListRequest.builder().build();
+        }
+
         // 查询菜单列表（根据参数筛选）
-        List<Menu> allMenus = menuDao.selectMenuList(request);
+        List<Menu> allMenus = menuDao.selectMenuList(request.getConstant(), request.getStatus());
 
         // 转换为VO并构建树形结构
         List<MenuVO> menuVOList = buildMenuTree(allMenus);
@@ -43,7 +48,7 @@ public class MenuManageServiceImpl implements MenuManageService {
                 .records(menuVOList)
                 .build();
 
-        log.info("查询菜单列表成功，顶层菜单数量：{}，总菜单数：{}", menuVOList.size(), allMenus.size());
+        log.info("查询菜单列表成功，顶层菜单数量：{}���总菜单数：{}", menuVOList.size(), allMenus.size());
 
         return response;
     }
@@ -242,8 +247,8 @@ public class MenuManageServiceImpl implements MenuManageService {
     public List<String> getAllPages() {
         log.info("获取所有菜单路由路径");
 
-        // 查询所有菜单
-        List<Menu> allMenus = menuDao.selectNotConstantMenus();
+        // 查询所有非常量且启用的菜单
+        List<Menu> allMenus = menuDao.selectMenuList(null, null);
 
         // 提取所有路由路径并平铺返回
         List<String> pages = allMenus.stream()

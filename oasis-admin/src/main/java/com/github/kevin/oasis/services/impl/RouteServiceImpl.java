@@ -37,8 +37,8 @@ public class RouteServiceImpl implements RouteService {
     public List<MenuRoute> getConstantRoutes() {
         log.info("获取常量路由");
 
-        // 查询所有constant=true的菜单
-        List<Menu> constantMenus = menuDao.selectConstantMenus();
+        // 查询所有constant=true且status=true的菜单
+        List<Menu> constantMenus = menuDao.selectMenuList(true, true);
 
         // 转换为MenuRoute格式并构建树形结构
         List<MenuRoute> routes = buildMenuRouteTree(constantMenus, null);
@@ -96,8 +96,8 @@ public class RouteServiceImpl implements RouteService {
                     .build();
         }
 
-        // 查询所有菜单
-        List<Menu> allMenus = menuDao.selectNotConstantMenus();
+        // 查询所有非常量且启用的菜单
+        List<Menu> allMenus = menuDao.selectMenuList(false, true);
 
         // 过滤出用户有权限的菜单（包括父级菜单）
         Set<Long> accessibleMenuIds = new HashSet<>(menuIds);
