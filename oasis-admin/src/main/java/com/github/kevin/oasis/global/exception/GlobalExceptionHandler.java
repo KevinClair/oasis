@@ -27,7 +27,7 @@ public class GlobalExceptionHandler {
         log.warn("业务异常：code={}, message={}", e.getCode(), e.getMessage());
         return Response.<Void>builder()
                 .code(e.getCode())
-                .msg(e.getMessage())
+                .msg(e.getMsg())
                 .build();
     }
 
