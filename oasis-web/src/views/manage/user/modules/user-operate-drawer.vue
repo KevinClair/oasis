@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import {enableStatusBooleanOptions, userGenderOptions} from '@/constants/business';
-import {fetchGetAllRoles, fetchSaveUser} from '@/service/api';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import { $t } from '@/locales';
+import { computed, ref, watch } from "vue";
+import {
+  enableStatusBooleanOptions,
+  userGenderOptions,
+} from "@/constants/business";
+import { fetchGetAllRoles, fetchSaveUser } from "@/service/api";
+import { useFormRules, useNaiveForm } from "@/hooks/common/form";
+import { $t } from "@/locales";
 
 defineOptions({
-  name: 'UserOperateDrawer'
+  name: "UserOperateDrawer",
 });
 
 interface Props {
@@ -19,13 +22,13 @@ interface Props {
 const props = defineProps<Props>();
 
 interface Emits {
-  (e: 'submitted'): void;
+  (e: "submitted"): void;
 }
 
 const emit = defineEmits<Emits>();
 
-const visible = defineModel<boolean>('visible', {
-  default: false
+const visible = defineModel<boolean>("visible", {
+  default: false,
 });
 
 const { formRef, validate, restoreValidation } = useNaiveForm();
@@ -33,13 +36,13 @@ const { defaultRequiredRule } = useFormRules();
 
 const title = computed(() => {
   const titles: Record<NaiveUI.TableOperateType, string> = {
-    add: $t('page.manage.user.addUser'),
-    edit: $t('page.manage.user.editUser')
+    add: $t("page.manage.user.addUser"),
+    edit: $t("page.manage.user.editUser"),
   };
   return titles[props.operateType];
 });
 
-const isEdit = computed(() => props.operateType === 'edit');
+const isEdit = computed(() => props.operateType === "edit");
 
 type Model = {
   id?: number;
@@ -58,32 +61,32 @@ type Model = {
 const model = ref(createDefaultModel());
 
 const statusOptions = computed(() =>
-  enableStatusBooleanOptions.map(item => ({
+  enableStatusBooleanOptions.map((item) => ({
     label: $t(item.label as App.I18n.I18nKey),
-    value: item.value as any
-  }))
+    value: item.value as any,
+  })),
 );
 
 function createDefaultModel(): Model {
   return {
     userId: undefined,
-    userAccount: '',
-    userName: '',
-    password: '',
+    userAccount: "",
+    userName: "",
+    password: "",
     userGender: null,
-    nickName: '',
-    phone: '',
-    email: '',
+    nickName: "",
+    phone: "",
+    email: "",
     userRoles: [],
-    status: true
+    status: true,
   };
 }
 
-type RuleKey = Extract<keyof Model, 'userName' | 'status'>;
+type RuleKey = Extract<keyof Model, "userName" | "status">;
 
 const rules: Record<RuleKey, App.Global.FormRule> = {
   userName: defaultRequiredRule,
-  status: defaultRequiredRule
+  status: defaultRequiredRule,
 };
 
 /** the enabled role options */
@@ -93,9 +96,9 @@ async function getRoleOptions() {
   const { error, data } = await fetchGetAllRoles();
 
   if (!error) {
-    roleOptions.value = data.map(item => ({
+    roleOptions.value = data.map((item) => ({
       label: item.roleName,
-      value: item.roleCode
+      value: item.roleCode,
     }));
   }
 }
@@ -103,19 +106,19 @@ async function getRoleOptions() {
 function handleInitModel() {
   model.value = createDefaultModel();
 
-  if (props.operateType === 'edit' && props.rowData) {
+  if (props.operateType === "edit" && props.rowData) {
     model.value = {
       id: props.rowData.id,
       userId: props.rowData.userId,
       userAccount: props.rowData.userAccount,
       userName: props.rowData.userName,
-      password: '', // 编辑时不回显密码
+      password: "", // 编辑时不回显密码
       userGender: props.rowData.userGender,
       nickName: props.rowData.nickName,
       phone: props.rowData.userPhone,
       email: props.rowData.userEmail,
       userRoles: props.rowData.userRoles || [],
-      status: props.rowData.status ?? true
+      status: props.rowData.status ?? true,
     };
   }
 }
@@ -127,12 +130,14 @@ function closeDrawer() {
 async function handleSubmit() {
   await validate();
 
-  const {error} = await fetchSaveUser(model.value as Api.SystemManage.UserEdit);
+  const { error } = await fetchSaveUser(
+    model.value as Api.SystemManage.UserEdit,
+  );
 
   if (!error) {
-    window.$message?.success($t('common.updateSuccess'));
+    window.$message?.success($t("common.updateSuccess"));
     closeDrawer();
-    emit('submitted');
+    emit("submitted");
   }
 }
 
@@ -157,37 +162,70 @@ watch(visible, () => {
             class="w-full"
           />
         </NFormItem>
-        <NFormItem :label="$t('page.manage.user.userAccount')" path="userAccount">
-          <NInput v-model:value="model.userAccount" :placeholder="$t('page.manage.user.form.userAccount')"/>
+        <NFormItem
+          :label="$t('page.manage.user.userAccount')"
+          path="userAccount"
+        >
+          <NInput
+            v-model:value="model.userAccount"
+            :placeholder="$t('page.manage.user.form.userAccount')"
+            :disabled="isEdit"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userName')" path="userName">
-          <NInput v-model:value="model.userName" :placeholder="$t('page.manage.user.form.userName')" />
+          <NInput
+            v-model:value="model.userName"
+            :placeholder="$t('page.manage.user.form.userName')"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.password')" path="password">
           <NInput
             v-model:value="model.password"
             type="password"
             show-password-on="click"
-            :placeholder="isEdit ? $t('page.manage.user.form.passwordEdit') : $t('page.manage.user.form.password')"
+            :placeholder="
+              isEdit
+                ? $t('page.manage.user.form.passwordEdit')
+                : $t('page.manage.user.form.password')
+            "
           />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userGender')" path="userGender">
           <NRadioGroup v-model:value="model.userGender">
-            <NRadio v-for="item in userGenderOptions" :key="item.value" :value="item.value" :label="$t(item.label)" />
+            <NRadio
+              v-for="item in userGenderOptions"
+              :key="item.value"
+              :value="item.value"
+              :label="$t(item.label)"
+            />
           </NRadioGroup>
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.nickName')" path="nickName">
-          <NInput v-model:value="model.nickName" :placeholder="$t('page.manage.user.form.nickName')" />
+          <NInput
+            v-model:value="model.nickName"
+            :placeholder="$t('page.manage.user.form.nickName')"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userPhone')" path="phone">
-          <NInput v-model:value="model.phone" :placeholder="$t('page.manage.user.form.userPhone')"/>
+          <NInput
+            v-model:value="model.phone"
+            :placeholder="$t('page.manage.user.form.userPhone')"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userEmail')" path="email">
-          <NInput v-model:value="model.email" :placeholder="$t('page.manage.user.form.userEmail')"/>
+          <NInput
+            v-model:value="model.email"
+            :placeholder="$t('page.manage.user.form.userEmail')"
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userStatus')" path="status">
           <NRadioGroup v-model:value="model.status">
-            <NRadio v-for="item in statusOptions" :key="String(item.value)" :value="item.value" :label="item.label"/>
+            <NRadio
+              v-for="item in statusOptions"
+              :key="String(item.value)"
+              :value="item.value"
+              :label="item.label"
+            />
           </NRadioGroup>
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userRole')" path="userRoles">
@@ -201,8 +239,10 @@ watch(visible, () => {
       </NForm>
       <template #footer>
         <NSpace :size="16">
-          <NButton @click="closeDrawer">{{ $t('common.cancel') }}</NButton>
-          <NButton type="primary" @click="handleSubmit">{{ $t('common.confirm') }}</NButton>
+          <NButton @click="closeDrawer">{{ $t("common.cancel") }}</NButton>
+          <NButton type="primary" @click="handleSubmit">{{
+            $t("common.confirm")
+          }}</NButton>
         </NSpace>
       </template>
     </NDrawerContent>

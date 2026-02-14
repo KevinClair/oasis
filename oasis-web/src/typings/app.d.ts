@@ -529,7 +529,11 @@ declare namespace App {
         };
         home: {
           branchDesc: string;
-          greeting: string;
+          greeting: {
+            morning: string;
+            afternoon: string;
+            evening: string;
+          };
           weatherDesc: string;
           projectCount: string;
           todo: string;
