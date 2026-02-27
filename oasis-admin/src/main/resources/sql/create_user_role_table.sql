@@ -1,7 +1,7 @@
 -- 创建用户角色关联表
 CREATE TABLE IF NOT EXISTS `user_role` (
     `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `user_id` BIGINT NOT NULL COMMENT '用户ID',
+    `user_id` BIGINT NOT NULL COMMENT '用户工号（关联user表的user_id字段）',
     `role_id` BIGINT NOT NULL COMMENT '角色ID',
     `create_by` VARCHAR(50) DEFAULT NULL COMMENT '创建人',
     `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

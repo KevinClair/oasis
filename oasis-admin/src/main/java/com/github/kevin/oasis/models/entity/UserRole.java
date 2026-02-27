@@ -22,7 +22,7 @@ public class UserRole {
     private Long id;
 
     /**
-     * 用户ID
+     * 用户工号（关联user表的user_id字段）
      */
     private Long userId;
 

@@ -263,7 +263,7 @@ public class UserManageServiceImpl implements UserManageService {
         }
 
         // 从关联表查询用户的所有角色ID列表（包括禁用的角色，用于编辑时回显）
-        List<Long> roleIds = userRoleDao.selectAllRoleIdsByUserId(user.getId());
+        List<Long> roleIds = userRoleDao.selectAllRoleIdsByUserId(user.getUserId());
 
         // 查询角色编码列表
         List<String> roleCodes = new ArrayList<>();

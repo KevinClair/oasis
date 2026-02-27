@@ -31,7 +31,7 @@
     <select id="selectUserIdsByRoleId" parameterType="long" resultType="long">
         SELECT ur.user_id
         FROM user_role ur
-        INNER JOIN user u ON ur.user_id = u.id
+        INNER JOIN user u ON ur.user_id = u.user_id
         WHERE ur.role_id = #{roleId}
         AND u.status = 1
     </select>
