@@ -4,6 +4,7 @@ import com.github.kevin.oasis.common.BusinessException;
 import com.github.kevin.oasis.common.ResponseStatusEnums;
 import com.github.kevin.oasis.dao.UserDao;
 import com.github.kevin.oasis.models.entity.User;
+import com.github.kevin.oasis.models.vo.oauth.ChangePasswordRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginResponse;
 import com.github.kevin.oasis.models.vo.oauth.UserInfoResponse;
@@ -46,8 +47,9 @@ public class AuthServiceImpl implements AuthService {
 
         // 使用JwtTokenUtils生成token和refreshToken
         // rememberMe为true时，token有效期为7天，否则为1天
+        // JWT中存储用户工号（user_id）而不是主键id
         String token = JwtTokenUtils.generateTokens(
-                String.valueOf(user.getId()),
+                user.getUserId(),  // 存储用户工号
                 user.getUserName(),
                 request.getRememberMe()
         );
@@ -72,9 +74,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserInfoResponse getUserInfo(Long userId) {
-        // 根据用户ID查询用户信息
-        User user = userDao.selectById(userId);
+    public UserInfoResponse getUserInfo(String userId) {
+        // 根据用户工号查询用户信息
+        User user = userDao.selectByUserAccountOrUserId(userId);
 
         // 如果查不到用户信息，抛出异常
         if (user == null) {
@@ -104,6 +106,27 @@ public class AuthServiceImpl implements AuthService {
         log.info("查询用户信息成功：id={}, userId={}, userName={}", user.getId(), user.getUserId(), user.getUserName());
 
         return response;
+    }
+
+    @Override
+    public boolean changePassword(ChangePasswordRequest request) {
+        log.info("修改密码：userAccount={}", request.getUserAccount());
+
+        // 验证用户账号和旧密码
+        int updatedCount = userDao.updatePassword(
+                request.getUserAccount(),
+                request.getOldPassword(),
+                request.getNewPassword()
+        );
+
+        if (updatedCount == 0) {
+            log.warn("修改密码失败：用户账号或旧密码错误, userAccount={}", request.getUserAccount());
+            throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "用户账号或旧密码错误");
+        }
+
+        log.info("修改密码成功：userAccount={}", request.getUserAccount());
+
+        return true;
     }
 }
 

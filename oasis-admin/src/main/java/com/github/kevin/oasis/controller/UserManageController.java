@@ -99,5 +99,21 @@ public class UserManageController {
 
         return Response.success(userVO);
     }
+
+    /**
+     * 重置密码（批量支持）
+     *
+     * @param request 重置密码请求参数
+     * @return 成功响应
+     */
+    @PostMapping("/resetPassword")
+    @Permission
+    public Response<Integer> resetPassword(@Valid @RequestBody UserDeleteRequest request) {
+        log.info("收到重置密码请求，参数：{}", request);
+
+        int updatedCount = userManageService.resetPassword(request);
+
+        return Response.success(updatedCount);
+    }
 }
 

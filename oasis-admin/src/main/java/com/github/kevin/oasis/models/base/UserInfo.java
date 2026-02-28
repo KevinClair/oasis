@@ -14,7 +14,7 @@ import java.util.List;
 public class UserInfo {
 
     /**
-     * 用户ID
+     * 用户工号（存储在JWT中）
      */
     private String userId;
 

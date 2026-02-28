@@ -46,7 +46,7 @@ const isEdit = computed(() => props.operateType === "edit");
 
 type Model = {
   id?: number;
-  userId?: number;
+  userId?: string;
   userAccount?: string;
   userName: string;
   password?: string;
@@ -155,11 +155,10 @@ watch(visible, () => {
     <NDrawerContent :title="title" :native-scrollbar="false" closable>
       <NForm ref="formRef" :model="model" :rules="rules">
         <NFormItem :label="$t('page.manage.user.userId')" path="userId">
-          <NInputNumber
+          <NInput
             v-model:value="model.userId"
             :placeholder="$t('page.manage.user.form.userId')"
             :disabled="isEdit"
-            class="w-full"
           />
         </NFormItem>
         <NFormItem
@@ -178,16 +177,13 @@ watch(visible, () => {
             :placeholder="$t('page.manage.user.form.userName')"
           />
         </NFormItem>
-        <NFormItem :label="$t('page.manage.user.password')" path="password">
+        <!-- 新增时显示密码字段，编辑时不显示 -->
+        <NFormItem v-if="!isEdit" :label="$t('page.manage.user.password')" path="password">
           <NInput
             v-model:value="model.password"
             type="password"
             show-password-on="click"
-            :placeholder="
-              isEdit
-                ? $t('page.manage.user.form.passwordEdit')
-                : $t('page.manage.user.form.password')
-            "
+            :placeholder="$t('page.manage.user.form.password')"
           />
         </NFormItem>
         <NFormItem :label="$t('page.manage.user.userGender')" path="userGender">

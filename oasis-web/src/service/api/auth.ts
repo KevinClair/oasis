@@ -48,3 +48,19 @@ export function fetchRefreshToken(refreshToken: string) {
 export function fetchCustomBackendError(code: string, msg: string) {
   return request({ url: '/auth/error', params: { code, msg } });
 }
+
+/**
+ * Change password
+ *
+ * @param userAccount User account
+ * @param oldPassword Old password
+ * @param newPassword New password
+ */
+export function fetchChangePassword(data: { userAccount: string; oldPassword: string; newPassword: string }) {
+  return request<boolean>({
+    url: '/auth/changePassword',
+    method: 'post',
+    data
+  });
+}
+

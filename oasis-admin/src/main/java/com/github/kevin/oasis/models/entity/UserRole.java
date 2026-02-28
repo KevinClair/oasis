@@ -24,7 +24,7 @@ public class UserRole {
     /**
      * 用户工号（关联user表的user_id字段）
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 角色ID

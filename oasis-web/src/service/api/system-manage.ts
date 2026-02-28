@@ -117,6 +117,15 @@ export function fetchToggleUserStatus(ids: number[]) {
   });
 }
 
+/** reset user password (batch reset supported) */
+export function fetchResetPassword(ids: number[]) {
+  return request<number>({
+    url: '/systemManage/user/resetPassword',
+    method: 'post',
+    data: { ids }
+  });
+}
+
 /** get menu list */
 export function fetchGetMenuList(params?: { constant?: boolean; status?: boolean }) {
   return request<Api.SystemManage.MenuList>({

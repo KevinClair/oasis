@@ -608,6 +608,11 @@ declare namespace App {
             confirmEnable: string;
             confirmDisable: string;
             batchToggleStatus: string;
+            resetPassword: string;
+            batchResetPassword: string;
+            confirmResetPassword: string;
+            confirmBatchResetPassword: string;
+            resetPasswordSuccess: string;
             form: {
               userId: string;
               userAccount: string;

@@ -367,6 +367,11 @@ const local: App.I18n.Schema = {
         confirmEnable: 'Are you sure to enable this user?',
         confirmDisable: 'Are you sure to disable this user?',
         batchToggleStatus: 'Batch Enable/Disable',
+        resetPassword: 'Reset Password',
+        batchResetPassword: 'Batch Reset Password',
+        confirmResetPassword: 'Are you sure to reset this user\'s password to default (123456)?',
+        confirmBatchResetPassword: 'Are you sure to reset selected users\' passwords to default (123456)?',
+        resetPasswordSuccess: 'Password reset successfully',
         form: {
           userId: 'Please enter user ID',
           userAccount: 'Please enter account',

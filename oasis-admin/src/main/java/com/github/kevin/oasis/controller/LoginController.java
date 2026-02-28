@@ -4,6 +4,7 @@ import com.github.kevin.oasis.global.oauth.Permission;
 import com.github.kevin.oasis.global.oauth.UserThreadLocal;
 import com.github.kevin.oasis.models.base.Response;
 import com.github.kevin.oasis.models.base.UserInfo;
+import com.github.kevin.oasis.models.vo.oauth.ChangePasswordRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginResponse;
 import com.github.kevin.oasis.models.vo.oauth.UserInfoResponse;
@@ -49,11 +50,25 @@ public class LoginController {
         UserInfo currentUser = UserThreadLocal.getUserInfo();
         log.info("收到获取用户信息请求：userId={}", currentUser.getUserId());
 
-        // 根据用户ID查询详细信息
-        Long userId = Long.valueOf(currentUser.getUserId());
-        UserInfoResponse response = authService.getUserInfo(userId);
+        // 根据用户工号查询详细信息
+        UserInfoResponse response = authService.getUserInfo(currentUser.getUserId());
 
         return Response.success(response);
+    }
+
+    /**
+     * 修改密码
+     *
+     * @param request 修改密码请求参数
+     * @return 成功响应
+     */
+    @PostMapping("/changePassword")
+    public Response<Boolean> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        log.info("收到修改密码请求：userAccount={}", request.getUserAccount());
+
+        boolean success = authService.changePassword(request);
+
+        return Response.success(success);
     }
 }
 

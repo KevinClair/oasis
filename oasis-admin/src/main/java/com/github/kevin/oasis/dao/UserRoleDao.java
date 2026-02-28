@@ -18,7 +18,7 @@ public interface UserRoleDao {
      * @param userId 用户ID
      * @return 角色ID列表
      */
-    List<Long> selectRoleIdsByUserId(@Param("userId") Long userId);
+    List<Long> selectRoleIdsByUserId(@Param("userId") String userId);
 
     /**
      * 根据用户ID查询所有角色ID列表（包括禁用的角色）
@@ -26,7 +26,7 @@ public interface UserRoleDao {
      * @param userId 用户ID
      * @return 角色ID列表
      */
-    List<Long> selectAllRoleIdsByUserId(@Param("userId") Long userId);
+    List<Long> selectAllRoleIdsByUserId(@Param("userId") String userId);
 
     /**
      * 根据角色ID查询用户ID列表
@@ -34,7 +34,7 @@ public interface UserRoleDao {
      * @param roleId 角色ID
      * @return 用户ID列表
      */
-    List<Long> selectUserIdsByRoleId(@Param("roleId") Long roleId);
+    List<String> selectUserIdsByRoleId(@Param("roleId") Long roleId);
 
     /**
      * 根据用户ID删除用户角色关联
@@ -42,7 +42,7 @@ public interface UserRoleDao {
      * @param userId 用户ID
      * @return 影响行数
      */
-    int deleteByUserId(@Param("userId") Long userId);
+    int deleteByUserId(@Param("userId") String userId);
 
     /**
      * 根据角色ID删除用户角色关联
@@ -66,7 +66,7 @@ public interface UserRoleDao {
      * @param userIds 用户ID列表
      * @return 影响行数
      */
-    int deleteByUserIds(@Param("userIds") List<Long> userIds);
+    int deleteByUserIds(@Param("userIds") List<String> userIds);
 
     /**
      * 根据角色ID列表删除用户角色关联

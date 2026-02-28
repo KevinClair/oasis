@@ -52,7 +52,7 @@ public class UserManageServiceImpl implements UserManageService {
         // 转换为VO
         List<UserVO> userVOList = userList.stream().map(user -> {
             // 从关联表查询用户的角色ID列表（只查询启用的角色）
-            List<Long> roleIds = userRoleDao.selectRoleIdsByUserId(user.getId());
+            List<Long> roleIds = userRoleDao.selectRoleIdsByUserId(user.getUserId());
 
             // 查询角色编码列表
             List<String> roleCodes = new ArrayList<>();
@@ -106,9 +106,20 @@ public class UserManageServiceImpl implements UserManageService {
             return 0;
         }
 
-        // 先删除用户角色关联
-        int deletedRelationCount = userRoleDao.deleteByUserIds(request.getIds());
-        log.info("删除用户角色关联成功，删除数量：{}", deletedRelationCount);
+        // 先查询要删除的用户，获取用户工号列表
+        List<String> userIds = new ArrayList<>();
+        for (Long id : request.getIds()) {
+            User user = userDao.selectById(id);
+            if (user != null && user.getUserId() != null) {
+                userIds.add(user.getUserId());
+            }
+        }
+
+        // 删除用户角色关联
+        if (!userIds.isEmpty()) {
+            int deletedRelationCount = userRoleDao.deleteByUserIds(userIds);
+            log.info("删除用户角色关联成功，删除数量：{}", deletedRelationCount);
+        }
 
         // 批量删除用户
         int deletedCount = userDao.deleteUsersByIds(request.getIds());
@@ -155,8 +166,8 @@ public class UserManageServiceImpl implements UserManageService {
             }
 
             // 检查工号是否已存在
-            if (request.getUserId() != null) {
-                User existingUser = userDao.selectByUserAccountOrUserId(String.valueOf(request.getUserId()));
+            if (StringUtils.hasText(request.getUserId())) {
+                User existingUser = userDao.selectByUserAccountOrUserId(request.getUserId());
                 if (existingUser != null) {
                     throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "用户工号已存在");
                 }
@@ -179,9 +190,9 @@ public class UserManageServiceImpl implements UserManageService {
             userDao.insert(user);
 
             // 保存用户角色关联
-            saveUserRoles(user.getId(), request.getUserRoles());
+            saveUserRoles(user.getUserId(), request.getUserRoles());
 
-            log.info("新增用户成功，用户ID：{}", user.getId());
+            log.info("新增用户成功，用户ID：{}，工号：{}", user.getId(), user.getUserId());
             return user.getId();
         } else {
             // 编辑用户
@@ -214,10 +225,10 @@ public class UserManageServiceImpl implements UserManageService {
             userDao.update(user);
 
             // 更新用户角色关联（先删除后新增）
-            userRoleDao.deleteByUserId(user.getId());
-            saveUserRoles(user.getId(), request.getUserRoles());
+            userRoleDao.deleteByUserId(user.getUserId());
+            saveUserRoles(user.getUserId(), request.getUserRoles());
 
-            log.info("更新用户成功，用户ID：{}", user.getId());
+            log.info("更新用户成功，用户ID：{}，工号：{}", user.getId(), user.getUserId());
             return user.getId();
         }
     }
@@ -225,7 +236,7 @@ public class UserManageServiceImpl implements UserManageService {
     /**
      * 保存用户角色关联
      */
-    private void saveUserRoles(Long userId, List<String> roleCodes) {
+    private void saveUserRoles(String userId, List<String> roleCodes) {
         if (roleCodes == null || roleCodes.isEmpty()) {
             log.info("用户没有分配角色，userId={}", userId);
             return;
@@ -296,6 +307,25 @@ public class UserManageServiceImpl implements UserManageService {
         log.info("查询用户详情成功");
 
         return userVO;
+    }
+
+    @Override
+    public int resetPassword(UserDeleteRequest request) {
+        log.info("重置用户密码，参数：{}", request);
+
+        if (request.getIds() == null || request.getIds().isEmpty()) {
+            log.warn("重置密码失败：用户ID列表为空");
+            return 0;
+        }
+
+        // 默认密码：123456
+        String defaultPassword = "123456";
+
+        int updatedCount = userDao.resetPassword(request.getIds(), defaultPassword);
+
+        log.info("重置密码成功，更新数量：{}", updatedCount);
+
+        return updatedCount;
     }
 }
 

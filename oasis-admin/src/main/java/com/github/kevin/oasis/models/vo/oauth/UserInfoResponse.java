@@ -24,7 +24,7 @@ public class UserInfoResponse {
     /**
      * 用户工号
      */
-    private Long userId;
+    private String userId;
 
     /**
      * 用户账号

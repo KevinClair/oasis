@@ -53,9 +53,8 @@ public class RouteController {
         UserInfo currentUser = UserThreadLocal.getUserInfo();
         log.info("收到获取用户动态路由请求，userId={}", currentUser.getUserId());
 
-        // 根据用户ID查询路由
-        Long userId = Long.valueOf(currentUser.getUserId());
-        UserRouteResponse response = routeService.getUserRoutes(userId);
+        // 根据用户工号查询路由
+        UserRouteResponse response = routeService.getUserRoutes(currentUser.getUserId());
 
         return Response.success(response);
     }

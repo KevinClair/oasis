@@ -4,7 +4,7 @@ import { NButton, NPopconfirm, NTag } from 'naive-ui';
 import { userGenderRecord } from '@/constants/business';
 import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
 import { $t } from '@/locales';
-import {fetchDeleteUsers, fetchGetUserList, fetchToggleUserStatus} from '@/service/api';
+import {fetchDeleteUsers, fetchGetUserList, fetchResetPassword, fetchToggleUserStatus} from '@/service/api';
 import {useAppStore} from '@/store/modules/app';
 import UserOperateDrawer from './modules/user-operate-drawer.vue';
 import UserSearch from './modules/user-search.vue';
@@ -136,12 +136,22 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 230,
+      width: 300,
       render: row => (
         <div class="flex-center gap-8px">
           <NButton type="primary" ghost size="small" onClick={() => edit(row.id)}>
             {$t('common.edit')}
           </NButton>
+          <NPopconfirm onPositiveClick={() => handleResetPassword(row.id)}>
+            {{
+              default: () => $t('page.manage.user.confirmResetPassword' as App.I18n.I18nKey),
+              trigger: () => (
+                <NButton type="info" ghost size="small">
+                  {$t('page.manage.user.resetPassword' as App.I18n.I18nKey)}
+                </NButton>
+              )
+            }}
+          </NPopconfirm>
           <NPopconfirm onPositiveClick={() => handleToggleStatus(row.id)}>
             {{
               default: () =>
@@ -221,6 +231,24 @@ async function handleToggleStatus(id: number) {
   }
 }
 
+async function handleResetPassword(id: number) {
+  const { error } = await fetchResetPassword([id]);
+
+  if (!error) {
+    window.$message?.success($t('page.manage.user.resetPasswordSuccess'));
+  }
+}
+
+async function handleBatchResetPassword() {
+  const ids = checkedRowKeys.value.map(key => Number(key));
+
+  const { error } = await fetchResetPassword(ids);
+
+  if (!error) {
+    window.$message?.success($t('page.manage.user.resetPasswordSuccess'));
+  }
+}
+
 function edit(id: number) {
   handleEdit(id);
 }
@@ -258,6 +286,17 @@ function edit(id: number) {
               </template>
               {{ $t('page.manage.user.batchToggleStatus') }}
             </NButton>
+            <NPopconfirm @positive-click="handleBatchResetPassword">
+              <template #trigger>
+                <NButton size="small" ghost type="info" :disabled="checkedRowKeys.length === 0">
+                  <template #icon>
+                    <icon-ic-round-lock-reset class="text-icon" />
+                  </template>
+                  {{ $t('page.manage.user.batchResetPassword') }}
+                </NButton>
+              </template>
+              {{ $t('page.manage.user.confirmBatchResetPassword') }}
+            </NPopconfirm>
             <NPopconfirm @positive-click="handleBatchDelete">
               <template #trigger>
                 <NButton size="small" ghost type="error" :disabled="checkedRowKeys.length === 0">

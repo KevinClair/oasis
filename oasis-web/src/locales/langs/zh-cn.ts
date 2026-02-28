@@ -363,6 +363,11 @@ const local: App.I18n.Schema = {
         confirmEnable: '确定启用该用户吗？',
         confirmDisable: '确定禁用该用户吗？',
         batchToggleStatus: '批量禁用/启用',
+        resetPassword: '初始化密码',
+        batchResetPassword: '批量初始化密码',
+        confirmResetPassword: '确定将该用户的密码重置为默认密码（123456）吗？',
+        confirmBatchResetPassword: '确定将选中用户的密码重置为默认密码（123456）吗？',
+        resetPasswordSuccess: '密码重置成功',
         form: {
           userId: '请输入工号',
           userAccount: '请输入账号',

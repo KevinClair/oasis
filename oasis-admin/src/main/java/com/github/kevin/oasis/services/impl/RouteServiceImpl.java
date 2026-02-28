@@ -49,11 +49,11 @@ public class RouteServiceImpl implements RouteService {
     }
 
     @Override
-    public UserRouteResponse getUserRoutes(Long userId) {
+    public UserRouteResponse getUserRoutes(String userId) {
         log.info("获取用户动态路由，userId={}", userId);
 
-        // 查询用户信息
-        User user = userDao.selectById(userId);
+        // 根据用户工号查询用户信息
+        User user = userDao.selectByUserAccountOrUserId(userId);
         if (user == null) {
             log.warn("用户不存在，userId={}", userId);
             return UserRouteResponse.builder()
@@ -63,7 +63,7 @@ public class RouteServiceImpl implements RouteService {
         }
 
         // 从关联表查询用户的角色ID列表（只查询启用的角色）
-        List<Long> roleIds = userRoleDao.selectRoleIdsByUserId(userId);
+        List<Long> roleIds = userRoleDao.selectRoleIdsByUserId(user.getUserId());
         if (roleIds == null || roleIds.isEmpty()) {
             log.warn("用户没有分配角色或角色已禁用，userId={}", userId);
             return UserRouteResponse.builder()

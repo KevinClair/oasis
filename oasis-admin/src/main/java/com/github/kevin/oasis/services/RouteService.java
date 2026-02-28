@@ -20,10 +20,10 @@ public interface RouteService {
     /**
      * 获取用户动态路由
      *
-     * @param userId 用户ID
+     * @param userId 用户工号
      * @return 用户路由响应
      */
-    UserRouteResponse getUserRoutes(Long userId);
+    UserRouteResponse getUserRoutes(String userId);
 
     /**
      * 检查路由是否存在

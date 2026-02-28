@@ -1,5 +1,6 @@
 package com.github.kevin.oasis.services;
 
+import com.github.kevin.oasis.models.vo.oauth.ChangePasswordRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginResponse;
 import com.github.kevin.oasis.models.vo.oauth.UserInfoResponse;
@@ -20,9 +21,16 @@ public interface AuthService {
     /**
      * 获取当前登录用户详细信息
      *
-     * @param userId 用户ID
+     * @param userId 用户工号
      * @return 用户详细信息
      */
-    UserInfoResponse getUserInfo(Long userId);
-}
+    UserInfoResponse getUserInfo(String userId);
 
+    /**
+     * 修改密码
+     *
+     * @param request 修改密码请求参数
+     * @return 是否成功
+     */
+    boolean changePassword(ChangePasswordRequest request);
+}

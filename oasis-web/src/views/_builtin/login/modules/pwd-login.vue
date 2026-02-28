@@ -2,6 +2,7 @@
 import { computed, reactive } from 'vue';
 import { useAuthStore } from '@/store/modules/auth';
 import { useFormRules, useNaiveForm } from '@/hooks/common/form';
+import { useRouterPush } from '@/hooks/common/router';
 import { $t } from '@/locales';
 
 defineOptions({
@@ -10,6 +11,7 @@ defineOptions({
 
 const authStore = useAuthStore();
 const { formRef, validate } = useNaiveForm();
+const { toggleLoginModule } = useRouterPush();
 
 interface FormModel {
   user: string;
@@ -56,6 +58,9 @@ async function handleSubmit() {
     <NSpace vertical :size="24">
       <div class="flex-y-center justify-between">
         <NCheckbox v-model:checked="model.rememberMe">{{ $t('page.login.pwdLogin.rememberMe') }}</NCheckbox>
+        <NButton text tag="a" type="primary" @click="toggleLoginModule('reset-pwd')">
+          {{ $t('page.login.pwdLogin.forgetPassword') }}
+        </NButton>
       </div>
       <NButton type="primary" size="large" round block :loading="authStore.loginLoading" @click="handleSubmit">
         {{ $t('common.confirm') }}

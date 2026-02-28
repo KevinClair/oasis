@@ -46,5 +46,12 @@ public interface UserManageService {
      * @return 更新的记录数
      */
     int toggleUserStatus(UserToggleStatusRequest request);
-}
 
+    /**
+     * 重置用户密码（批量支持）
+     *
+     * @param request 重置密码请求参数
+     * @return 更新的记录数
+     */
+    int resetPassword(UserDeleteRequest request);
+}

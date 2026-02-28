@@ -53,7 +53,7 @@ declare namespace Api {
     /** user */
     type User = Common.CommonRecord<{
       /** user ID (work number) */
-      userId: number;
+      userId: string;
       /** user account */
       userAccount: string;
       /** user name */
@@ -84,7 +84,7 @@ declare namespace Api {
       /** user id (required for edit) */
       id?: number;
       /** user ID (work number) */
-      userId?: number;
+      userId?: string;
       /** user account */
       userAccount?: string;
       /** user name */

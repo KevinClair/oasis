@@ -103,5 +103,26 @@ public interface UserDao {
      * @return 影响行数
      */
     int toggleUserStatus(@Param("ids") List<Long> ids);
+
+    /**
+     * 批量重置用户密码
+     *
+     * @param ids 用户ID列表
+     * @param password 新密码
+     * @return 影响行数
+     */
+    int resetPassword(@Param("ids") List<Long> ids, @Param("password") String password);
+
+    /**
+     * 根据用户账号和旧密码更新密码
+     *
+     * @param userAccount 用户账号
+     * @param oldPassword 旧密码
+     * @param newPassword 新密码
+     * @return 影响行数
+     */
+    int updatePassword(@Param("userAccount") String userAccount,
+                      @Param("oldPassword") String oldPassword,
+                      @Param("newPassword") String newPassword);
 }
 
