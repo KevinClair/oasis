@@ -126,6 +126,18 @@ export function fetchResetPassword(ids: number[]) {
   });
 }
 
+/**
+ * get all enabled users
+ *
+ * these users are all enabled
+ */
+export function fetchGetAllUsers() {
+  return request<Api.SystemManage.AllUser[]>({
+    url: '/systemManage/user/getAllEnabledUsers',
+    method: 'get'
+  });
+}
+
 /** get menu list */
 export function fetchGetMenuList(params?: { constant?: boolean; status?: boolean }) {
   return request<Api.SystemManage.MenuList>({
@@ -217,6 +229,49 @@ export function fetchDeleteAnnouncements(ids: number[]) {
     url: '/systemManage/announcement/deleteAnnouncements',
     method: 'post',
     data: { ids }
+  });
+}
+
+/** get application list */
+export function fetchGetApplicationList(params?: Api.SystemManage.ApplicationSearchParams) {
+  return request<Api.SystemManage.ApplicationList>({
+    url: '/systemManage/application/getApplicationList',
+    method: 'post',
+    data: params
+  });
+}
+
+/** save application (add/edit) */
+export function fetchSaveApplication(data: Api.SystemManage.ApplicationEdit) {
+  return request<number>({
+    url: '/systemManage/application/saveApplication',
+    method: 'post',
+    data
+  });
+}
+
+/** delete applications (batch delete supported) */
+export function fetchDeleteApplications(ids: number[]) {
+  return request<number>({
+    url: '/systemManage/application/deleteApplications',
+    method: 'post',
+    data: { ids }
+  });
+}
+
+/** get application by id */
+export function fetchGetApplicationById(id: number) {
+  return request<Api.SystemManage.Application>({
+    url: `/systemManage/application/getApplicationById/${id}`,
+    method: 'get'
+  });
+}
+
+/** get application registration nodes */
+export function fetchGetRegistrationNodes(appCode: string) {
+  return request<Api.SystemManage.RegistrationNode[]>({
+    url: `/systemManage/application/getRegistrationNodes/${appCode}`,
+    method: 'get'
   });
 }
 

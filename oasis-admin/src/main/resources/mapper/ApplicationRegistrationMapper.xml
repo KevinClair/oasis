@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.ApplicationRegistrationDao">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.ApplicationRegistration">
+        <id column="id" property="id"/>
+        <result column="app_code" property="appCode"/>
+        <result column="ip_address" property="ipAddress"/>
+        <result column="machine_tag" property="machineTag"/>
+        <result column="register_time" property="registerTime"/>
+        <result column="extra_info" property="extraInfo"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, app_code, ip_address, machine_tag, register_time, extra_info
+    </sql>
+
+    <!-- 根据应用Code查询注册节点列表 -->
+    <select id="selectByAppCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM application_registration
+        WHERE app_code = #{appCode}
+        ORDER BY register_time DESC
+    </select>
+
+</mapper>
+

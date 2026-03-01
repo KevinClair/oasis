@@ -235,7 +235,8 @@ const local: App.I18n.Schema = {
     'manage_user-detail': 'User Detail',
     manage_role: 'Role Manage',
     manage_menu: 'Menu Manage',
-    manage_announcement: 'Announcement Manage'
+    manage_announcement: 'Announcement Manage',
+    manage_application: 'Application Manage'
   },
   page: {
     login: {
@@ -323,7 +324,11 @@ const local: App.I18n.Schema = {
         status: {
           enable: 'Enable',
           disable: 'Disable'
-        }
+        },
+        createBy: 'Created By',
+        createTime: 'Create Time',
+        updateBy: 'Updated By',
+        updateTime: 'Update Time'
       },
       role: {
         title: 'Role List',
@@ -481,6 +486,42 @@ const local: App.I18n.Schema = {
           normal: 'Normal',
           warning: 'Warning',
           important: 'Important Notice'
+        }
+      },
+      application: {
+        title: 'Application List',
+        appCode: 'AppCode',
+        appName: 'Name',
+        appKey: 'Key',
+        description: 'Description',
+        adminUser: 'Administrator',
+        developers: 'Developers',
+        status: 'Status',
+        enable: 'Enable',
+        disable: 'Disable',
+        confirmEnable: 'Are you sure to enable this application?',
+        confirmDisable: 'Are you sure to disable this application?',
+        form: {
+          appCode: 'Please enter AppCode',
+          appName: 'Please enter name',
+          appKey: 'Key (auto-generated)',
+          description: 'Please enter description',
+          adminUser: 'Default to creator if empty',
+          developers: 'Please select developers',
+          status: 'Please select status'
+        },
+        addApplication: 'Add Application',
+        editApplication: 'Edit Application',
+        appCodeExists: 'AppCode already exists',
+        noPermission: 'No permission to operate this application',
+        viewRegistrationNodes: 'View Nodes',
+        registrationNode: {
+          title: 'Registration Nodes',
+          ipAddress: 'IP Address',
+          machineTag: 'Machine Tag',
+          registerTime: 'Register Time',
+          extraInfo: 'Extra Info',
+          noData: 'No registration nodes'
         }
       }
     }

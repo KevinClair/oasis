@@ -212,5 +212,13 @@
           AND password = #{oldPassword}
     </update>
 
+    <!-- 查询所有启用的用户（用于下拉选择） -->
+    <select id="selectAllEnabledUsers" resultMap="BaseResultMap">
+        SELECT id, user_id, user_name, user_account
+        FROM user
+        WHERE status = 1
+        ORDER BY user_id
+    </select>
+
 </mapper>
 

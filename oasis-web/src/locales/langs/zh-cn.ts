@@ -231,7 +231,8 @@ const local: App.I18n.Schema = {
     'manage_user-detail': '用户详情',
     manage_role: '角色管理',
     manage_menu: '菜单管理',
-    manage_announcement: '公告管理'
+    manage_announcement: '公告管理',
+    manage_application: '应用管理'
   },
   page: {
     login: {
@@ -319,7 +320,11 @@ const local: App.I18n.Schema = {
         status: {
           enable: '启用',
           disable: '禁用'
-        }
+        },
+        createBy: '创建人',
+        createTime: '创建时间',
+        updateBy: '修改人',
+        updateTime: '修改时间'
       },
       role: {
         title: '角色列表',
@@ -477,6 +482,42 @@ const local: App.I18n.Schema = {
           normal: '普通',
           warning: '警告',
           important: '重要通知'
+        }
+      },
+      application: {
+        title: '应用列表',
+        appCode: 'AppCode',
+        appName: '名称',
+        appKey: '密钥',
+        description: '描述',
+        adminUser: '管理员',
+        developers: '开发者',
+        status: '状态',
+        enable: '启用',
+        disable: '禁用',
+        confirmEnable: '确定启用该应用吗？',
+        confirmDisable: '确定禁用该应用吗？',
+        form: {
+          appCode: '请输入AppCode',
+          appName: '请输入名称',
+          appKey: '密钥（自动生成）',
+          description: '请输入描述',
+          adminUser: '不填默认为创建人',
+          developers: '请选择开发者',
+          status: '请选择状态'
+        },
+        addApplication: '新增应用',
+        editApplication: '编辑应用',
+        appCodeExists: 'AppCode已存在',
+        noPermission: '无权限操作此应用',
+        viewRegistrationNodes: '查看注册节点',
+        registrationNode: {
+          title: '注册节点列表',
+          ipAddress: 'IP地址',
+          machineTag: '机器标签',
+          registerTime: '注册时间',
+          extraInfo: '额外信息',
+          noData: '暂无注册节点'
         }
       }
     }

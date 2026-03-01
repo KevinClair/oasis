@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.ApplicationDao">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.Application">
+        <id column="id" property="id"/>
+        <result column="app_code" property="appCode"/>
+        <result column="app_name" property="appName"/>
+        <result column="app_key" property="appKey"/>
+        <result column="description" property="description"/>
+        <result column="admin_user_ids" property="adminUserIds"
+                typeHandler="com.github.kevin.oasis.config.JsonTypeHandler"/>
+        <result column="developer_user_ids" property="developerUserIds"
+                typeHandler="com.github.kevin.oasis.config.JsonTypeHandler"/>
+        <result column="status" property="status"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 基础列 -->
+    <sql id="Base_Column_List">
+        id, app_code, app_name, app_key, description,
+        admin_user_ids, developer_user_ids, status,
+        create_by, create_time, update_by, update_time
+    </sql>
+
+    <!-- 查询应用列表（带数据权限过滤） -->
+    <select id="selectApplicationList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM application
+        WHERE 1=1
+        <!-- 数据权限：只能看到自己是管理员或开发者的应用 -->
+        <if test="currentUserId != null and currentUserId != ''">
+            AND (
+                create_by = #{currentUserId}
+                OR JSON_CONTAINS(admin_user_ids, JSON_QUOTE(#{currentUserId}))
+                OR JSON_CONTAINS(developer_user_ids, JSON_QUOTE(#{currentUserId}))
+            )
+        </if>
+        <if test="appCode != null and appCode != ''">
+            AND app_code LIKE CONCAT('%', #{appCode}, '%')
+        </if>
+        <if test="appName != null and appName != ''">
+            AND app_name LIKE CONCAT('%', #{appName}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY create_time DESC
+        <if test="current != null and size != null">
+            LIMIT #{size} OFFSET ${(current - 1) * size}
+        </if>
+    </select>
+
+    <!-- 查询应用总数（带数据权限过滤） -->
+    <select id="countApplicationList" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM application
+        WHERE 1=1
+        <!-- 数据权限：只能看到自己是管理员或开发者的应用 -->
+        <if test="currentUserId != null and currentUserId != ''">
+            AND (
+                create_by = #{currentUserId}
+                OR JSON_CONTAINS(admin_user_ids, JSON_QUOTE(#{currentUserId}))
+                OR JSON_CONTAINS(developer_user_ids, JSON_QUOTE(#{currentUserId}))
+            )
+        </if>
+        <if test="appCode != null and appCode != ''">
+            AND app_code LIKE CONCAT('%', #{appCode}, '%')
+        </if>
+        <if test="appName != null and appName != ''">
+            AND app_name LIKE CONCAT('%', #{appName}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+    </select>
+
+    <!-- 根据ID查询应用 -->
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM application
+        WHERE id = #{id}
+    </select>
+
+    <!-- 根据应用Code查询应用 -->
+    <select id="selectByAppCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM application
+        WHERE app_code = #{appCode}
+    </select>
+
+    <!-- 新增应用 -->
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.Application"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO application (
+            app_code, app_name, app_key, description,
+            admin_user_ids, developer_user_ids, status,
+            create_by, create_time, update_by, update_time
+        ) VALUES (
+            #{appCode}, #{appName}, #{appKey}, #{description},
+            #{adminUserIds, typeHandler=com.github.kevin.oasis.config.JsonTypeHandler},
+            #{developerUserIds, typeHandler=com.github.kevin.oasis.config.JsonTypeHandler},
+            #{status},
+            #{createBy}, NOW(), #{updateBy}, NOW()
+        )
+    </insert>
+
+    <!-- 更新应用 -->
+    <update id="update">
+        UPDATE application
+        SET app_name = #{appName},
+            description = #{description},
+            admin_user_ids = #{adminUserIds, typeHandler=com.github.kevin.oasis.config.JsonTypeHandler},
+            developer_user_ids = #{developerUserIds, typeHandler=com.github.kevin.oasis.config.JsonTypeHandler},
+            status = #{status},
+            update_by = #{updateBy},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 批量删除应用 -->
+    <delete id="deleteByIds">
+        DELETE FROM application
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <!-- 检查用户权限（必须是管理员） -->
+    <select id="checkPermission" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM application
+        WHERE id = #{id}
+          AND JSON_CONTAINS(admin_user_ids, JSON_QUOTE(#{userId}))
+    </select>
+
+</mapper>
+

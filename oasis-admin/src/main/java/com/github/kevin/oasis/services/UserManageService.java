@@ -54,4 +54,11 @@ public interface UserManageService {
      * @return 更新的记录数
      */
     int resetPassword(UserDeleteRequest request);
+
+    /**
+     * 获取所有启用的用户（用于下拉选择）
+     *
+     * @return 用户简要信息列表
+     */
+    java.util.List<UserSimpleVO> getAllEnabledUsers();
 }

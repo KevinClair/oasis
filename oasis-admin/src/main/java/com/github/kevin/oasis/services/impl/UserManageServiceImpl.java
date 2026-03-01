@@ -327,5 +327,29 @@ public class UserManageServiceImpl implements UserManageService {
 
         return updatedCount;
     }
+
+    @Override
+    public List<UserSimpleVO> getAllEnabledUsers() {
+        log.info("查询所有启用的用户");
+
+        // 查询所有启用的用户
+        List<User> userList = userDao.selectAllEnabledUsers();
+
+        // 转换为VO，包含userAccount字段用于显示
+        List<UserSimpleVO> result = userList.stream()
+                .map(user -> {
+                    UserSimpleVO vo = new UserSimpleVO();
+                    vo.setId(user.getId());
+                    vo.setUserId(user.getUserId());
+                    vo.setUserName(user.getUserName());
+                    vo.setUserAccount(user.getUserAccount());
+                    return vo;
+                })
+                .collect(Collectors.toList());
+
+        log.info("查询所有启用的用户成功，数量：{}", result.size());
+
+        return result;
+    }
 }
 

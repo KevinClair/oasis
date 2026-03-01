@@ -124,5 +124,12 @@ public interface UserDao {
     int updatePassword(@Param("userAccount") String userAccount,
                       @Param("oldPassword") String oldPassword,
                       @Param("newPassword") String newPassword);
+
+    /**
+     * 查询所有启用的用户（用于下拉选择）
+     *
+     * @return 用户列表
+     */
+    List<User> selectAllEnabledUsers();
 }
 

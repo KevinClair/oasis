@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 /**
  * 用户管理控制器
  */
@@ -114,6 +116,21 @@ public class UserManageController {
         int updatedCount = userManageService.resetPassword(request);
 
         return Response.success(updatedCount);
+    }
+
+    /**
+     * 获取所有启用的用户（用于下拉选择）
+     *
+     * @return 用户列表
+     */
+    @GetMapping("/getAllEnabledUsers")
+    @Permission
+    public Response<List<UserSimpleVO>> getAllEnabledUsers() {
+        log.info("收到获取所有启用用户请求");
+
+        List<UserSimpleVO> users = userManageService.getAllEnabledUsers();
+
+        return Response.success(users);
     }
 }
 

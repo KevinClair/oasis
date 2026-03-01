@@ -565,6 +565,10 @@ declare namespace App {
               enable: string;
               disable: string;
             };
+            createBy: string;
+            createTime: string;
+            updateBy: string;
+            updateTime: string;
           };
           role: {
             title: string;
@@ -722,6 +726,42 @@ declare namespace App {
               normal: string;
               warning: string;
               important: string;
+            };
+          };
+          application: {
+            title: string;
+            appCode: string;
+            appName: string;
+            appKey: string;
+            description: string;
+            adminUser: string;
+            developers: string;
+            status: string;
+            enable: string;
+            disable: string;
+            confirmEnable: string;
+            confirmDisable: string;
+            form: {
+              appCode: string;
+              appName: string;
+              appKey: string;
+              description: string;
+              adminUser: string;
+              developers: string;
+              status: string;
+            };
+            addApplication: string;
+            editApplication: string;
+            appCodeExists: string;
+            noPermission: string;
+            viewRegistrationNodes: string;
+            registrationNode: {
+              title: string;
+              ipAddress: string;
+              machineTag: string;
+              registerTime: string;
+              extraInfo: string;
+              noData: string;
             };
           };
         };

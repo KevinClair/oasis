@@ -105,6 +105,9 @@ declare namespace Api {
       userRoles?: string[];
     };
 
+    /** all user */
+    type AllUser = Pick<User, 'id' | 'userId' | 'userName' | 'userAccount'>;
+
     /**
      * menu type
      *
@@ -263,6 +266,74 @@ declare namespace Api {
       content: string;
       /** announcement type */
       type: AnnouncementType;
+    };
+
+    /** application */
+    type Application = Common.CommonRecord<{
+      /** application code */
+      appCode: string;
+      /** application name */
+      appName: string;
+      /** application key */
+      appKey: string;
+      /** description */
+      description: string;
+      /** admin user ids */
+      adminUserIds: string[];
+      /** admin user names */
+      adminUserNames?: string[];
+      /** admin user accounts */
+      adminUserAccounts?: string[];
+      /** developer user ids */
+      developerUserIds: string[];
+      /** developer names */
+      developerNames?: string[];
+      /** developer accounts */
+      developerAccounts?: string[];
+      /** status */
+      status: boolean;
+    }>;
+
+    /** application search params */
+    type ApplicationSearchParams = CommonType.RecordNullable<
+      Pick<Api.SystemManage.Application, 'appCode' | 'appName' | 'status'> & CommonSearchParams
+    >;
+
+    /** application list */
+    type ApplicationList = Common.PaginatingQueryRecord<Application>;
+
+    /** application edit */
+    type ApplicationEdit = {
+      /** application id (required for edit) */
+      id?: number;
+      /** application code */
+      appCode: string;
+      /** application name */
+      appName: string;
+      /** description */
+      description: string;
+      /** admin user ids */
+      adminUserIds?: string[];
+      /** developer user ids */
+      developerUserIds?: string[];
+      /** status */
+      status?: boolean;
+    };
+
+    /** registration node */
+    type RegistrationNode = {
+      /** node id */
+      id: number;
+      /** application code */
+      appCode: string;
+      /** IP address */
+      ipAddress: string;
+      /** machine tag */
+      machineTag?: string;
+      /** register time */
+      registerTime: string;
+      /** extra info (JSON format) */
+      extraInfo?: string;
     };
   }
 }
