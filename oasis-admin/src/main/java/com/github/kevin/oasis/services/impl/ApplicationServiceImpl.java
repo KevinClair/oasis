@@ -1,7 +1,5 @@
 package com.github.kevin.oasis.services.impl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kevin.oasis.common.BusinessException;
 import com.github.kevin.oasis.common.ResponseStatusEnums;
 import com.github.kevin.oasis.dao.ApplicationDao;
@@ -32,7 +30,6 @@ public class ApplicationServiceImpl implements ApplicationService {
     private final ApplicationDao applicationDao;
     private final ApplicationRegistrationDao applicationRegistrationDao;
     private final UserDao userDao;
-    private final ObjectMapper objectMapper;
 
     @Override
     public ApplicationListResponse getApplicationList(ApplicationListRequest request) {
@@ -82,8 +79,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             application.setAppName(request.getAppName());
             application.setDescription(request.getDescription());
             application.setAdminUserIds(request.getAdminUserIds() != null && !request.getAdminUserIds().isEmpty()
-                    ? convertToJsonString(request.getAdminUserIds()) : application.getAdminUserIds());
-            application.setDeveloperIds(convertToJsonString(request.getDeveloperIds()));
+                    ? request.getAdminUserIds() : application.getAdminUserIds());
+            application.setDeveloperUserIds(request.getDeveloperUserIds() != null ? request.getDeveloperUserIds() : new ArrayList<>());
             application.setStatus(request.getStatus() != null ? request.getStatus() : true);
             application.setUpdateBy(currentUserId);
 
@@ -104,8 +101,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                     .appName(request.getAppName())
                     .appKey(appKey)
                     .description(request.getDescription())
-                    .adminUserIds(convertToJsonString(adminIds))
-                    .developerIds(convertToJsonString(request.getDeveloperIds()))
+                    .adminUserIds(adminIds)
+                    .developerUserIds(request.getDeveloperUserIds() != null ? request.getDeveloperUserIds() : new ArrayList<>())
                     .status(request.getStatus() != null ? request.getStatus() : true)
                     .createBy(currentUserId)
                     .updateBy(currentUserId)
@@ -255,21 +252,6 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .registerTime(registration.getRegisterTime())
                 .extraInfo(registration.getExtraInfo())
                 .build();
-    }
-
-    /**
-     * 转换列表为JSON字符串
-     */
-    private String convertToJsonString(List<String> list) {
-        if (list == null || list.isEmpty()) {
-            return "[]";
-        }
-        try {
-            return objectMapper.writeValueAsString(list);
-        } catch (JsonProcessingException e) {
-            log.error("转换JSON失败", e);
-            return "[]";
-        }
     }
 }
 
