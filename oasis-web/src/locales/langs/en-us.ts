@@ -230,6 +230,7 @@ const local: App.I18n.Schema = {
     500: 'Server Error',
     'iframe-page': 'Iframe',
     home: 'Home',
+    application: 'Application Manage',
     manage: 'System Manage',
     manage_user: 'User Manage',
     'manage_user-detail': 'User Detail',

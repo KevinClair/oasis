@@ -40,6 +40,17 @@ export const generatedRoutes: GeneratedRoute[] = [
     }
   },
   {
+    name: 'application',
+    path: '/application',
+    component: 'layout.base$view.application',
+    meta: {
+      title: 'application',
+      i18nKey: 'route.application',
+      icon: 'mdi:application-cog',
+      order: 2
+    }
+  },
+  {
     name: 'home',
     path: '/home',
     component: 'layout.base$view.home',
@@ -93,15 +104,6 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'manage_announcement',
           i18nKey: 'route.manage_announcement'
-        }
-      },
-      {
-        name: 'manage_application',
-        path: '/manage/application',
-        component: 'view.manage_application',
-        meta: {
-          title: 'manage_application',
-          i18nKey: 'route.manage_application'
         }
       },
       {

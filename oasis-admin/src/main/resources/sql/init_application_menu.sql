@@ -29,7 +29,7 @@ VALUES (
     '应用管理',                      -- menu_name: 菜单名称
     'application',                  -- route_name: 路由名称
     '/application',                 -- route_path: 路由路径
-    'layout.base$view.manage_application',  -- component: 组件路径
+    'layout.base$view.application', -- component: 组件路径
     '1',                            -- icon_type: 1表示iconify图标
     'mdi:application-cog',          -- icon: 图标名称
     'route.application',            -- i18n_key: 国际化key
