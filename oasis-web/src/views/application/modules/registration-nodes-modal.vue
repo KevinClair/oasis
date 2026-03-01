@@ -98,7 +98,10 @@ watch(
     if (visible) {
       fetchNodes();
     } else {
-      nodes.value = [];
+      // 延迟清空数据，避免关闭动画时内容闪烁
+      setTimeout(() => {
+        nodes.value = [];
+      }, 300);
     }
   }
 );
@@ -109,21 +112,28 @@ watch(
     v-model:show="modalVisible"
     preset="card"
     :title="$t('page.manage.application.registrationNode.title')"
-    class="w-800px"
+    :style="{ width: '800px', maxWidth: '90vw' }"
+    transform-origin="center"
   >
     <NSpin :show="loading">
-      <NDataTable
-        v-if="nodes.length > 0"
-        :columns="columns"
-        :data="nodes"
-        :row-key="(row: Api.SystemManage.RegistrationNode) => row.id"
-        size="small"
-        :max-height="400"
-      />
-      <NEmpty v-else :description="$t('page.manage.application.registrationNode.noData')" class="h-200px" />
+      <div class="registration-nodes-content">
+        <NDataTable
+          v-if="nodes.length > 0"
+          :columns="columns"
+          :data="nodes"
+          :row-key="(row: Api.SystemManage.RegistrationNode) => row.id"
+          size="small"
+          :max-height="400"
+        />
+        <NEmpty v-else :description="$t('page.manage.application.registrationNode.noData')" class="h-200px" />
+      </div>
     </NSpin>
   </NModal>
 </template>
 
-<style scoped></style>
+<style scoped>
+.registration-nodes-content {
+  min-height: 200px;
+}
+</style>
 

@@ -232,8 +232,7 @@ const local: App.I18n.Schema = {
     'manage_user-detail': '用户详情',
     manage_role: '角色管理',
     manage_menu: '菜单管理',
-    manage_announcement: '公告管理',
-    manage_application: '应用管理'
+    manage_announcement: '公告管理'
   },
   page: {
     login: {
@@ -329,10 +328,10 @@ const local: App.I18n.Schema = {
       },
       role: {
         title: '角色列表',
-        roleName: '角色名称',
-        roleCode: '角色编码',
-        roleStatus: '角色状态',
-        roleDesc: '角色描述',
+        roleName: '名称',
+        roleCode: '编码',
+        roleStatus: '状态',
+        roleDesc: '描述',
         roleRoutes: '可访问路由',
         menuAuth: '菜单权限',
         buttonAuth: '按钮权限',
@@ -342,10 +341,10 @@ const local: App.I18n.Schema = {
         confirmDisable: '确定禁用该角色吗？',
         batchToggleStatus: '批量禁用/启用',
         form: {
-          roleName: '请输入角色名称',
-          roleCode: '请输入角色编码',
-          roleStatus: '请选择角色状态',
-          roleDesc: '请输入角色描述',
+          roleName: '请输入名称',
+          roleCode: '请输入编码',
+          roleStatus: '请选择状态',
+          roleDesc: '请输入描述',
           roleRoutes: '请选择可访问的路由',
           menuAuth: '请选择菜单权限'
         },
@@ -362,8 +361,8 @@ const local: App.I18n.Schema = {
         nickName: '昵称',
         userPhone: '手机号',
         userEmail: '邮箱',
-        userStatus: '用户状态',
-        userRole: '用户角色',
+        userStatus: '状态',
+        userRole: '角色',
         enable: '启用',
         disable: '禁用',
         confirmEnable: '确定启用该用户吗？',
@@ -384,8 +383,8 @@ const local: App.I18n.Schema = {
           nickName: '请输入昵称',
           userPhone: '请输入手机号',
           userEmail: '请输入邮箱',
-          userStatus: '请选择用户状态',
-          userRole: '请选择用户角色'
+          userStatus: '请选择状态',
+          userRole: '请选择角色'
         },
         addUser: '新增用户',
         editUser: '编辑用户',
@@ -399,8 +398,8 @@ const local: App.I18n.Schema = {
         title: '菜单列表',
         id: 'ID',
         parentId: '父级菜单ID',
-        menuType: '菜单类型',
-        menuName: '菜单名称',
+        menuType: '类型',
+        menuName: '名称',
         routeName: '路由名称',
         routePath: '路由路径',
         pathParam: '路径参数',
@@ -422,11 +421,11 @@ const local: App.I18n.Schema = {
         button: '按钮',
         buttonCode: '按钮编码',
         buttonDesc: '按钮描述',
-        menuStatus: '菜单状态',
+        menuStatus: '状态',
         form: {
           home: '请选择首页',
-          menuType: '请选择菜单类型',
-          menuName: '请输入菜单名称',
+          menuType: '请选择类型',
+          menuName: '请输入名称',
           routeName: '请输入路由名称',
           routePath: '请输入路由路径',
           pathParam: '请输入路径参数',
@@ -448,7 +447,7 @@ const local: App.I18n.Schema = {
           button: '请选择是否按钮',
           buttonCode: '请输入按钮编码',
           buttonDesc: '请输入按钮描述',
-          menuStatus: '请选择菜单状态'
+          menuStatus: '请选择状态'
         },
         addMenu: '新增菜单',
         editMenu: '编辑菜单',
@@ -465,17 +464,17 @@ const local: App.I18n.Schema = {
       announcement: {
         title: '公告列表',
         id: 'ID',
-        announcementTitle: '公告标题',
-        announcementContent: '公告内容',
-        announcementType: '公告类型',
+        announcementTitle: '标题',
+        announcementContent: '内容',
+        announcementType: '类型',
         createBy: '创建人',
         createTime: '创建时间',
         updateBy: '修改人',
         updateTime: '修改时间',
         form: {
-          title: '请输入公告标题',
-          content: '请输入公告内容',
-          type: '请选择公告类型'
+          title: '请输入标题',
+          content: '请输入内容',
+          type: '请选择类型'
         },
         addAnnouncement: '新增公告',
         editAnnouncement: '编辑公告',

@@ -236,8 +236,7 @@ const local: App.I18n.Schema = {
     'manage_user-detail': 'User Detail',
     manage_role: 'Role Manage',
     manage_menu: 'Menu Manage',
-    manage_announcement: 'Announcement Manage',
-    manage_application: 'Application Manage'
+    manage_announcement: 'Announcement Manage'
   },
   page: {
     login: {
@@ -333,10 +332,10 @@ const local: App.I18n.Schema = {
       },
       role: {
         title: 'Role List',
-        roleName: 'Role Name',
-        roleCode: 'Role Code',
-        roleStatus: 'Role Status',
-        roleDesc: 'Role Description',
+        roleName: 'Name',
+        roleCode: 'Code',
+        roleStatus: 'Status',
+        roleDesc: 'Description',
         roleRoutes: 'Accessible Routes',
         menuAuth: 'Menu Auth',
         buttonAuth: 'Button Auth',
@@ -346,10 +345,10 @@ const local: App.I18n.Schema = {
         confirmDisable: 'Are you sure to disable this role?',
         batchToggleStatus: 'Batch Enable/Disable',
         form: {
-          roleName: 'Please enter role name',
-          roleCode: 'Please enter role code',
-          roleStatus: 'Please select role status',
-          roleDesc: 'Please enter role description',
+          roleName: 'Please enter name',
+          roleCode: 'Please enter code',
+          roleStatus: 'Please select status',
+          roleDesc: 'Please enter description',
           roleRoutes: 'Please select accessible routes',
           menuAuth: 'Please select menu permissions'
         },
@@ -366,8 +365,8 @@ const local: App.I18n.Schema = {
         nickName: 'Nick Name',
         userPhone: 'Phone Number',
         userEmail: 'Email',
-        userStatus: 'User Status',
-        userRole: 'User Role',
+        userStatus: 'Status',
+        userRole: 'Role',
         enable: 'Enable',
         disable: 'Disable',
         confirmEnable: 'Are you sure to enable this user?',
@@ -388,8 +387,8 @@ const local: App.I18n.Schema = {
           nickName: 'Please enter nick name',
           userPhone: 'Please enter phone number',
           userEmail: 'Please enter email',
-          userStatus: 'Please select user status',
-          userRole: 'Please select user role'
+          userStatus: 'Please select status',
+          userRole: 'Please select role'
         },
         addUser: 'Add User',
         editUser: 'Edit User',
@@ -403,8 +402,8 @@ const local: App.I18n.Schema = {
         title: 'Menu List',
         id: 'ID',
         parentId: 'Parent ID',
-        menuType: 'Menu Type',
-        menuName: 'Menu Name',
+        menuType: 'Type',
+        menuName: 'Name',
         routeName: 'Route Name',
         routePath: 'Route Path',
         pathParam: 'Path Param',
@@ -426,11 +425,11 @@ const local: App.I18n.Schema = {
         button: 'Button',
         buttonCode: 'Button Code',
         buttonDesc: 'Button Desc',
-        menuStatus: 'Menu Status',
+        menuStatus: 'Status',
         form: {
           home: 'Please select home',
-          menuType: 'Please select menu type',
-          menuName: 'Please enter menu name',
+          menuType: 'Please select type',
+          menuName: 'Please enter name',
           routeName: 'Please enter route name',
           routePath: 'Please enter route path',
           pathParam: 'Please enter path param',
@@ -452,7 +451,7 @@ const local: App.I18n.Schema = {
           button: 'Please select whether it is a button',
           buttonCode: 'Please enter button code',
           buttonDesc: 'Please enter button description',
-          menuStatus: 'Please select menu status'
+          menuStatus: 'Please select status'
         },
         addMenu: 'Add Menu',
         editMenu: 'Edit Menu',
@@ -477,9 +476,9 @@ const local: App.I18n.Schema = {
         updateBy: 'Updated By',
         updateTime: 'Update Time',
         form: {
-          title: 'Please enter announcement title',
-          content: 'Please enter announcement content',
-          type: 'Please select announcement type'
+          title: 'Please enter title',
+          content: 'Please enter content',
+          type: 'Please select type'
         },
         addAnnouncement: 'Add Announcement',
         editAnnouncement: 'Edit Announcement',
