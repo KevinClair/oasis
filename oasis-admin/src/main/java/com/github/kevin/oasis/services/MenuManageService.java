@@ -42,10 +42,17 @@ public interface MenuManageService {
     int deleteMenus(MenuDeleteRequest request);
 
     /**
+     * 切换菜单状态（启用/禁用）
+     *
+     * @param request 切换状态请求参数
+     * @return 更新的记录数
+     */
+    int toggleMenuStatus(MenuToggleStatusRequest request);
+
+    /**
      * 获取所有菜单的路由路径（平铺）
      *
      * @return 路由路径列表
      */
     List<String> getAllPages();
 }
-

@@ -244,11 +244,27 @@ public class MenuManageServiceImpl implements MenuManageService {
     }
 
     @Override
+    public int toggleMenuStatus(MenuToggleStatusRequest request) {
+        log.info("切换菜单状态，参数：{}", request);
+
+        if (request.getIds() == null || request.getIds().isEmpty()) {
+            log.warn("切换菜单状态失败：菜单ID列表为空");
+            return 0;
+        }
+
+        int updatedCount = menuDao.toggleMenuStatus(request.getIds());
+
+        log.info("切换菜单状态成功，更新数量：{}", updatedCount);
+
+        return updatedCount;
+    }
+
+    @Override
     public List<String> getAllPages() {
         log.info("获取所有菜单路由路径");
 
-        // 查询所有非常量且启用的菜单
-        List<Menu> allMenus = menuDao.selectMenuList(null, null);
+        // 查询所有启用的菜单
+        List<Menu> allMenus = menuDao.selectMenuList(null, true);
 
         // 提取所有路由路径并平铺返回
         List<String> pages = allMenus.stream()
@@ -263,4 +279,3 @@ public class MenuManageServiceImpl implements MenuManageService {
         return pages;
     }
 }
-

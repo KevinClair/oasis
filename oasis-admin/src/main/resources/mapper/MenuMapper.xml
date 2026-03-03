@@ -131,5 +131,15 @@
         </foreach>
     </delete>
 
-</mapper>
+    <!-- 切换菜单状态（启用/禁用） -->
+    <update id="toggleMenuStatus">
+        UPDATE menu
+        SET status = NOT status,
+            update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
 
+</mapper>

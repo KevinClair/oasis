@@ -5,7 +5,7 @@ import {NButton, NPopconfirm, NTag} from 'naive-ui';
 import {useBoolean} from '@sa/hooks';
 import {yesOrNoRecord} from '@/constants/common';
 import {menuTypeRecord} from '@/constants/business';
-import {fetchDeleteMenus, fetchGetAllPages, fetchGetMenuList} from '@/service/api';
+import {fetchDeleteMenus, fetchGetAllPages, fetchGetMenuList, fetchToggleMenuStatus} from '@/service/api';
 import {useAppStore} from '@/store/modules/app';
 import {defaultTransform, useNaivePaginatedTable, useTableOperate} from '@/hooks/common/table';
 import {$t} from '@/locales';
@@ -142,7 +142,7 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 230,
+      width: 320,
       render: row => (
         <div class="flex-center justify-end gap-8px">
           {row.menuType === 1 && (
@@ -153,6 +153,21 @@ const { columns, columnChecks, data, loading, pagination, getData, getDataByPage
           <NButton type="primary" ghost size="small" onClick={() => handleEdit(row)}>
             {$t('common.edit')}
           </NButton>
+          <NPopconfirm onPositiveClick={() => handleToggleStatus(row.id)}>
+            {{
+              default: () =>
+                row.status
+                  ? $t('page.manage.menu.confirmDisable' as App.I18n.I18nKey)
+                  : $t('page.manage.menu.confirmEnable' as App.I18n.I18nKey),
+              trigger: () => (
+                <NButton type={row.status ? 'warning' : 'success'} ghost size="small">
+                  {row.status
+                    ? $t('page.manage.menu.disable' as App.I18n.I18nKey)
+                    : $t('page.manage.menu.enable' as App.I18n.I18nKey)}
+                </NButton>
+              )
+            }}
+          </NPopconfirm>
           <NPopconfirm onPositiveClick={() => handleDelete(row.id)}>
             {{
               default: () => $t('common.confirmDelete'),
@@ -194,6 +209,23 @@ async function handleDelete(id: number) {
   if (!error) {
     window.$message?.success($t('common.deleteSuccess'));
     onDeleted();
+  }
+}
+
+async function handleBatchToggleStatus() {
+  const ids = checkedRowKeys.value.map(key => Number(key));
+  const {error} = await fetchToggleMenuStatus(ids);
+
+  if (!error) {
+    await getData();
+  }
+}
+
+async function handleToggleStatus(id: number) {
+  const {error} = await fetchToggleMenuStatus([id]);
+
+  if (!error) {
+    await getData();
   }
 }
 
@@ -241,7 +273,39 @@ init();
           @add="handleAdd"
           @delete="handleBatchDelete"
           @refresh="getData"
-        />
+        >
+          <template #default>
+            <NButton size="small" ghost type="primary" @click="handleAdd">
+              <template #icon>
+                <icon-ic-round-plus class="text-icon"/>
+              </template>
+              {{ $t('common.add') }}
+            </NButton>
+            <NButton
+              size="small"
+              type="warning"
+              ghost
+              :disabled="checkedRowKeys.length === 0"
+              @click="handleBatchToggleStatus"
+            >
+              <template #icon>
+                <icon-ic-round-swap-horiz class="text-icon"/>
+              </template>
+              {{ $t('page.manage.menu.batchToggleStatus' as App.I18n.I18nKey) }}
+            </NButton>
+            <NPopconfirm @positive-click="handleBatchDelete">
+              <template #trigger>
+                <NButton size="small" ghost type="error" :disabled="checkedRowKeys.length === 0">
+                  <template #icon>
+                    <icon-ic-round-delete class="text-icon"/>
+                  </template>
+                  {{ $t('common.batchDelete') }}
+                </NButton>
+              </template>
+              {{ $t('common.confirmDelete') }}
+            </NPopconfirm>
+          </template>
+        </TableHeaderOperation>
       </template>
       <NDataTable
         v-model:checked-row-keys="checkedRowKeys"

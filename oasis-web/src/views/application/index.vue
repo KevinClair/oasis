@@ -21,6 +21,15 @@ const searchParams: Api.SystemManage.ApplicationSearchParams = reactive({
 
 const nodesModalVisible = ref(false);
 const selectedAppCode = ref<string>('');
+const appKeyVisibleMap = ref<Record<number, boolean>>({});
+
+function toggleAppKeyVisible(id: number) {
+  appKeyVisibleMap.value[id] = !appKeyVisibleMap.value[id];
+}
+
+function getMaskedAppKey(appKey: string) {
+  return '*'.repeat(Math.min(Math.max(appKey.length, 8), 16));
+}
 const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetApplicationList(searchParams),
   transform: response => defaultTransform(response),
@@ -45,6 +54,29 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       title: $t('page.manage.application.appName'),
       align: 'center',
       minWidth: 150
+    },
+    {
+      key: 'appKey',
+      title: $t('page.manage.application.appKey'),
+      align: 'center',
+      width: 220,
+      render: row => {
+        if (!row.appKey) {
+          return <span class="text-gray-400">-</span>;
+        }
+
+        const visible = !!appKeyVisibleMap.value[row.id];
+        const displayText = visible ? row.appKey : getMaskedAppKey(row.appKey);
+
+        return (
+          <div class="flex items-center justify-center gap-8px">
+            <span class="font-mono">{displayText}</span>
+            <NButton text type="primary" size="small" onClick={() => toggleAppKeyVisible(row.id)}>
+              {visible ? <icon-ic-round-visibility-off class="text-icon" /> : <icon-ic-round-visibility class="text-icon" />}
+            </NButton>
+          </div>
+        );
+      }
     },
     {
       key: 'description',
@@ -273,4 +305,3 @@ function viewNodes(appCode: string) {
 </template>
 
 <style scoped></style>
-

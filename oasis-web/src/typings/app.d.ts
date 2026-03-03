@@ -666,6 +666,11 @@ declare namespace App {
             buttonCode: string;
             buttonDesc: string;
             menuStatus: string;
+            enable: string;
+            disable: string;
+            confirmEnable: string;
+            confirmDisable: string;
+            batchToggleStatus: string;
             form: {
               home: string;
               menuType: string;

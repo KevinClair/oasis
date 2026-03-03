@@ -142,7 +142,7 @@ public class RouteServiceImpl implements RouteService {
         }
 
         Menu menu = menuDao.selectByRouteName(routeName);
-        boolean exists = menu != null;
+        boolean exists = menu != null && menu.getStatus() != null && menu.getStatus();
 
         log.info("路由存在性检查结果，routeName={}，exists={}", routeName, exists);
 
@@ -256,4 +256,3 @@ public class RouteServiceImpl implements RouteService {
                 .build();
     }
 }
-

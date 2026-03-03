@@ -422,6 +422,11 @@ const local: App.I18n.Schema = {
         buttonCode: '按钮编码',
         buttonDesc: '按钮描述',
         menuStatus: '状态',
+        enable: '启用',
+        disable: '禁用',
+        confirmEnable: '确定启用该菜单吗？',
+        confirmDisable: '确定禁用该菜单吗？',
+        batchToggleStatus: '批量禁用/启用',
         form: {
           home: '请选择首页',
           menuType: '请选择类型',

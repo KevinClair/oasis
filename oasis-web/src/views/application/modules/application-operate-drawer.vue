@@ -122,7 +122,7 @@ function handleInitModel() {
       id: props.rowData.id,
       appCode: props.rowData.appCode,
       appName: props.rowData.appName,
-      appKey: props.rowData.appKey,
+      appKey: props.rowData.appKey || '',
       description: props.rowData.description,
       adminUserIds: props.rowData.adminUserIds || [],
       developerUserIds: props.rowData.developerUserIds || [],
@@ -171,7 +171,13 @@ watch(visible, () => {
           <NInput v-model:value="model.appName" :placeholder="$t('page.manage.application.form.appName')" />
         </NFormItem>
         <NFormItem v-if="isEdit" :label="$t('page.manage.application.appKey')" path="appKey">
-          <NInput v-model:value="model.appKey" :placeholder="$t('page.manage.application.form.appKey')" disabled />
+          <NInput
+            v-model:value="model.appKey"
+            type="password"
+            show-password-on="click"
+            :placeholder="$t('page.manage.application.form.appKey')"
+            readonly
+          />
         </NFormItem>
         <NFormItem :label="$t('page.manage.application.description')" path="description">
           <NInput
@@ -225,4 +231,3 @@ watch(visible, () => {
 </template>
 
 <style scoped></style>
-

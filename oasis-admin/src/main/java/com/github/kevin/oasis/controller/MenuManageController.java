@@ -91,5 +91,20 @@ public class MenuManageController {
 
         return Response.success(deletedCount);
     }
-}
 
+    /**
+     * 切换菜单状态（启用/禁用）
+     *
+     * @param request 切换状态请求参数
+     * @return 成功响应
+     */
+    @PostMapping("/toggleMenuStatus")
+    @Permission
+    public Response<Integer> toggleMenuStatus(@Valid @RequestBody MenuToggleStatusRequest request) {
+        log.info("收到切换菜单状态请求，参数：{}", request);
+
+        int updatedCount = menuManageService.toggleMenuStatus(request);
+
+        return Response.success(updatedCount);
+    }
+}

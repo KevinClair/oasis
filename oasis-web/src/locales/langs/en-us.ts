@@ -426,6 +426,11 @@ const local: App.I18n.Schema = {
         buttonCode: 'Button Code',
         buttonDesc: 'Button Desc',
         menuStatus: 'Status',
+        enable: 'Enable',
+        disable: 'Disable',
+        confirmEnable: 'Are you sure to enable this menu?',
+        confirmDisable: 'Are you sure to disable this menu?',
+        batchToggleStatus: 'Batch Enable/Disable',
         form: {
           home: 'Please select home',
           menuType: 'Please select type',

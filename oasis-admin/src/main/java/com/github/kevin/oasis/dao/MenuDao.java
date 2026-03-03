@@ -62,6 +62,14 @@ public interface MenuDao {
     int deleteMenusByIds(@Param("ids") List<Long> ids);
 
     /**
+     * 切换菜单状态（启用/禁用）
+     *
+     * @param ids 菜单ID列表
+     * @return 影响行数
+     */
+    int toggleMenuStatus(@Param("ids") List<Long> ids);
+
+    /**
      * 根据父级菜单ID查询子菜单
      *
      * @param parentId 父级菜单ID
@@ -69,4 +77,3 @@ public interface MenuDao {
      */
     List<Menu> selectByParentId(@Param("parentId") Long parentId);
 }
-

@@ -173,6 +173,15 @@ export function fetchDeleteMenus(ids: number[]) {
   });
 }
 
+/** toggle menu status (enable/disable) */
+export function fetchToggleMenuStatus(ids: number[]) {
+  return request<number>({
+    url: '/systemManage/menu/toggleMenuStatus',
+    method: 'post',
+    data: {ids}
+  });
+}
+
 /** get all pages */
 export function fetchGetAllPages() {
   return request<string[]>({
@@ -274,4 +283,3 @@ export function fetchGetRegistrationNodes(appCode: string) {
     method: 'get'
   });
 }
-
