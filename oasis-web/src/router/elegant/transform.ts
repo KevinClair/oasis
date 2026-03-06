@@ -175,7 +175,11 @@ const routeMap: RouteMap = {
   "manage_menu": "/manage/menu",
   "manage_role": "/manage/role",
   "manage_user": "/manage/user",
-  "manage_user-detail": "/manage/user-detail/:id"
+  "manage_user-detail": "/manage/user-detail/:id",
+  "schedule": "/schedule",
+  "schedule_job": "/schedule/job",
+  "schedule_job_alarm-events": "/schedule/job/alarm-events/:jobId",
+  "schedule_log": "/schedule/log"
 };
 
 /**

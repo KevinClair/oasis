@@ -335,5 +335,124 @@ declare namespace Api {
       /** extra info (JSON format) */
       extraInfo?: string;
     };
+
+    /** schedule job */
+    type ScheduleJob = Common.CommonRecord<{
+      appCode: string;
+      jobName: string;
+      handlerName: string;
+      scheduleType: string;
+      scheduleConf: string;
+      routeStrategy: string;
+      blockStrategy: string;
+      retryCount: number;
+      timeoutSeconds: number;
+      alarmInheritApp: boolean;
+      nextTriggerTime?: number | null;
+    }>;
+
+    type ScheduleJobSearchParams = CommonType.RecordNullable<
+      Pick<Api.SystemManage.ScheduleJob, 'appCode' | 'jobName' | 'handlerName' | 'scheduleType' | 'status'> &
+        CommonSearchParams
+    >;
+
+    type ScheduleJobList = Common.PaginatingQueryRecord<ScheduleJob>;
+
+    type ScheduleJobEdit = {
+      id?: number;
+      appCode: string;
+      jobName: string;
+      handlerName: string;
+      scheduleType: string;
+      scheduleConf: string;
+      routeStrategy?: string;
+      blockStrategy?: string;
+      retryCount?: number;
+      timeoutSeconds?: number;
+      status: boolean;
+      alarmInheritApp?: boolean;
+    };
+
+    type ScheduleLog = {
+      id: number;
+      jobId: number;
+      appCode: string;
+      jobName: string;
+      triggerTime: number;
+      finishTime?: number | null;
+      triggerType: string;
+      executorAddress?: string | null;
+      status: string;
+      attemptNo: number;
+      errorMessage?: string | null;
+      traceId?: string | null;
+    };
+
+    type ScheduleLogSearchParams = CommonType.RecordNullable<
+      {
+        logId: number;
+        jobId: number;
+        appCode: string;
+        status: string;
+        startTriggerTime: number;
+        endTriggerTime: number;
+      } & CommonSearchParams
+    >;
+
+    type ScheduleLogList = Common.PaginatingQueryRecord<ScheduleLog>;
+
+    type AppAlarmTemplate = {
+      id?: number;
+      appCode: string;
+      receivers: string[];
+      channels: string[];
+      quietPeriodMinutes: number;
+      failThreshold: number;
+      timeoutSeconds: number;
+      enabled: boolean;
+    };
+
+    type JobAlarmPolicy = {
+      id?: number;
+      jobId: number;
+      inheritAppTemplate: boolean;
+      receivers: string[];
+      channels: string[];
+      quietPeriodMinutes?: number | null;
+      failThreshold?: number | null;
+      timeoutSeconds?: number | null;
+      enabled: boolean;
+    };
+
+    type JobAlarmEvent = {
+      id: number;
+      jobId: number;
+      fireLogId: number;
+      alarmType: string;
+      alarmContent: string;
+      notifyStatus: string;
+      triggerTime: number;
+      notifyChannels?: string | null;
+    };
+
+    type JobAlarmEventSearchParams = CommonType.RecordNullable<
+      Pick<Api.SystemManage.JobAlarmEvent, 'alarmType' | 'notifyStatus'> & CommonSearchParams
+    >;
+
+    type JobAlarmEventList = Common.PaginatingQueryRecord<JobAlarmEvent>;
+
+    type AlarmNotifyRecord = {
+      id: number;
+      alarmEventId: number;
+      channel: string;
+      receiver: string;
+      sendStatus: string;
+      responseMessage?: string | null;
+      sendTime?: number | null;
+    };
+
+    type JobAlarmEventDetail = Omit<JobAlarmEvent, 'notifyChannels'> & {
+      notifyRecords: AlarmNotifyRecord[];
+    };
   }
 }

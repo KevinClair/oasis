@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.JobInfoDao">
+
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.JobInfo">
+        <id column="id" property="id"/>
+        <result column="app_code" property="appCode"/>
+        <result column="job_name" property="jobName"/>
+        <result column="handler_name" property="handlerName"/>
+        <result column="schedule_type" property="scheduleType"/>
+        <result column="schedule_conf" property="scheduleConf"/>
+        <result column="route_strategy" property="routeStrategy"/>
+        <result column="block_strategy" property="blockStrategy"/>
+        <result column="retry_count" property="retryCount"/>
+        <result column="timeout_seconds" property="timeoutSeconds"/>
+        <result column="status" property="status"/>
+        <result column="alarm_inherit_app" property="alarmInheritApp"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_by" property="updateBy"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, app_code, job_name, handler_name, schedule_type, schedule_conf,
+        route_strategy, block_strategy, retry_count, timeout_seconds,
+        status, alarm_inherit_app, create_by, create_time, update_by, update_time
+    </sql>
+
+    <select id="selectJobList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM job_info
+        <where>
+            <if test="request.appCode != null and request.appCode != ''">
+                AND app_code = #{request.appCode}
+            </if>
+            <if test="request.jobName != null and request.jobName != ''">
+                AND job_name LIKE CONCAT('%', #{request.jobName}, '%')
+            </if>
+            <if test="request.handlerName != null and request.handlerName != ''">
+                AND handler_name LIKE CONCAT('%', #{request.handlerName}, '%')
+            </if>
+            <if test="request.scheduleType != null and request.scheduleType != ''">
+                AND schedule_type = #{request.scheduleType}
+            </if>
+            <if test="request.status != null">
+                AND status = #{request.status}
+            </if>
+        </where>
+        ORDER BY update_time DESC
+        <if test="request.current != null and request.size != null">
+            LIMIT #{request.size} OFFSET ${(request.current - 1) * request.size}
+        </if>
+    </select>
+
+    <select id="countJobList" resultType="long">
+        SELECT COUNT(*)
+        FROM job_info
+        <where>
+            <if test="request.appCode != null and request.appCode != ''">
+                AND app_code = #{request.appCode}
+            </if>
+            <if test="request.jobName != null and request.jobName != ''">
+                AND job_name LIKE CONCAT('%', #{request.jobName}, '%')
+            </if>
+            <if test="request.handlerName != null and request.handlerName != ''">
+                AND handler_name LIKE CONCAT('%', #{request.handlerName}, '%')
+            </if>
+            <if test="request.scheduleType != null and request.scheduleType != ''">
+                AND schedule_type = #{request.scheduleType}
+            </if>
+            <if test="request.status != null">
+                AND status = #{request.status}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM job_info
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.JobInfo" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO job_info (
+            app_code, job_name, handler_name, schedule_type, schedule_conf,
+            route_strategy, block_strategy, retry_count, timeout_seconds,
+            status, alarm_inherit_app, create_by, create_time, update_by, update_time
+        ) VALUES (
+            #{appCode}, #{jobName}, #{handlerName}, #{scheduleType}, #{scheduleConf},
+            #{routeStrategy}, #{blockStrategy}, #{retryCount}, #{timeoutSeconds},
+            #{status}, #{alarmInheritApp}, #{createBy}, NOW(), #{updateBy}, NOW()
+        )
+    </insert>
+
+    <update id="update" parameterType="com.github.kevin.oasis.models.entity.JobInfo">
+        UPDATE job_info
+        SET app_code = #{appCode},
+            job_name = #{jobName},
+            handler_name = #{handlerName},
+            schedule_type = #{scheduleType},
+            schedule_conf = #{scheduleConf},
+            route_strategy = #{routeStrategy},
+            block_strategy = #{blockStrategy},
+            retry_count = #{retryCount},
+            timeout_seconds = #{timeoutSeconds},
+            status = #{status},
+            alarm_inherit_app = #{alarmInheritApp},
+            update_by = #{updateBy},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatusByIds">
+        UPDATE job_info
+        SET status = #{status},
+            update_by = #{updateBy},
+            update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

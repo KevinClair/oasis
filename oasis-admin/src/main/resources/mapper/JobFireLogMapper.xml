@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.JobFireLogDao">
+
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.JobFireLog" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO job_fire_log (
+            job_id, trigger_time, trigger_type, executor_address, status, attempt_no, error_message, trace_id, create_time, update_time
+        ) VALUES (
+            #{jobId}, #{triggerTime}, #{triggerType}, #{executorAddress}, #{status}, #{attemptNo}, #{errorMessage}, #{traceId}, NOW(), NOW()
+        )
+    </insert>
+
+    <select id="selectLogList" resultType="com.github.kevin.oasis.models.vo.schedule.JobLogVO">
+        SELECT
+            l.id,
+            l.job_id AS jobId,
+            j.app_code AS appCode,
+            j.job_name AS jobName,
+            l.trigger_time AS triggerTime,
+            l.finish_time AS finishTime,
+            l.trigger_type AS triggerType,
+            l.executor_address AS executorAddress,
+            l.status,
+            l.attempt_no AS attemptNo,
+            l.error_message AS errorMessage,
+            l.trace_id AS traceId
+        FROM job_fire_log l
+        LEFT JOIN job_info j ON l.job_id = j.id
+        <where>
+            <if test="request.logId != null">
+                AND l.id = #{request.logId}
+            </if>
+            <if test="request.jobId != null">
+                AND l.job_id = #{request.jobId}
+            </if>
+            <if test="request.appCode != null and request.appCode != ''">
+                AND j.app_code = #{request.appCode}
+            </if>
+            <if test="request.status != null and request.status != ''">
+                AND l.status = #{request.status}
+            </if>
+            <if test="request.startTriggerTime != null">
+                AND l.trigger_time &gt;= #{request.startTriggerTime}
+            </if>
+            <if test="request.endTriggerTime != null">
+                AND l.trigger_time &lt;= #{request.endTriggerTime}
+            </if>
+        </where>
+        ORDER BY l.trigger_time DESC
+        <if test="request.current != null and request.size != null">
+            LIMIT #{request.size} OFFSET ${(request.current - 1) * request.size}
+        </if>
+    </select>
+
+    <select id="countLogList" resultType="long">
+        SELECT COUNT(*)
+        FROM job_fire_log l
+        LEFT JOIN job_info j ON l.job_id = j.id
+        <where>
+            <if test="request.logId != null">
+                AND l.id = #{request.logId}
+            </if>
+            <if test="request.jobId != null">
+                AND l.job_id = #{request.jobId}
+            </if>
+            <if test="request.appCode != null and request.appCode != ''">
+                AND j.app_code = #{request.appCode}
+            </if>
+            <if test="request.status != null and request.status != ''">
+                AND l.status = #{request.status}
+            </if>
+            <if test="request.startTriggerTime != null">
+                AND l.trigger_time &gt;= #{request.startTriggerTime}
+            </if>
+            <if test="request.endTriggerTime != null">
+                AND l.trigger_time &lt;= #{request.endTriggerTime}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectLogDetailById" resultType="com.github.kevin.oasis.models.vo.schedule.JobLogVO">
+        SELECT
+            l.id,
+            l.job_id AS jobId,
+            j.app_code AS appCode,
+            j.job_name AS jobName,
+            l.trigger_time AS triggerTime,
+            l.finish_time AS finishTime,
+            l.trigger_type AS triggerType,
+            l.executor_address AS executorAddress,
+            l.status,
+            l.attempt_no AS attemptNo,
+            l.error_message AS errorMessage,
+            l.trace_id AS traceId
+        FROM job_fire_log l
+        LEFT JOIN job_info j ON l.job_id = j.id
+        WHERE l.id = #{id}
+    </select>
+
+    <update id="updateResult">
+        UPDATE job_fire_log
+        SET status = #{log.status},
+            attempt_no = #{log.attemptNo},
+            finish_time = #{log.finishTime},
+            executor_address = #{log.executorAddress},
+            error_message = #{log.errorMessage},
+            update_time = NOW()
+        WHERE id = #{log.id}
+    </update>
+
+</mapper>

@@ -283,3 +283,107 @@ export function fetchGetRegistrationNodes(appCode: string) {
     method: 'get'
   });
 }
+
+/** get schedule job list */
+export function fetchGetScheduleJobList(params?: Api.SystemManage.ScheduleJobSearchParams) {
+  return request<Api.SystemManage.ScheduleJobList>({
+    url: '/schedule/job/list',
+    method: 'post',
+    data: params
+  });
+}
+
+/** save schedule job */
+export function fetchSaveScheduleJob(data: Api.SystemManage.ScheduleJobEdit) {
+  return request<number>({
+    url: '/schedule/job/save',
+    method: 'post',
+    data
+  });
+}
+
+/** enable/disable schedule jobs */
+export function fetchEnableScheduleJobs(ids: number[], status: boolean) {
+  return request<number>({
+    url: '/schedule/job/enable',
+    method: 'post',
+    data: { ids, status }
+  });
+}
+
+/** trigger schedule job once */
+export function fetchTriggerScheduleJob(jobId: number, triggerParam?: string) {
+  return request<number>({
+    url: '/schedule/job/trigger',
+    method: 'post',
+    data: { jobId, triggerParam }
+  });
+}
+
+/** get schedule log list */
+export function fetchGetScheduleLogList(params?: Api.SystemManage.ScheduleLogSearchParams) {
+  return request<Api.SystemManage.ScheduleLogList>({
+    url: '/schedule/log/list',
+    method: 'post',
+    data: params
+  });
+}
+
+/** get schedule log detail */
+export function fetchGetScheduleLogDetail(id: number) {
+  return request<Api.SystemManage.ScheduleLog>({
+    url: `/schedule/log/${id}`,
+    method: 'get'
+  });
+}
+
+/** get app default alarm template */
+export function fetchGetAppAlarmTemplate(appCode: string) {
+  return request<Api.SystemManage.AppAlarmTemplate>({
+    url: `/schedule/app/${appCode}/alarm-template`,
+    method: 'get'
+  });
+}
+
+/** save app default alarm template */
+export function fetchSaveAppAlarmTemplate(data: Api.SystemManage.AppAlarmTemplate) {
+  return request<number>({
+    url: '/schedule/app/alarm-template/save',
+    method: 'post',
+    data
+  });
+}
+
+/** get job alarm policy */
+export function fetchGetJobAlarmPolicy(jobId: number) {
+  return request<Api.SystemManage.JobAlarmPolicy>({
+    url: `/schedule/job/${jobId}/alarm-policy`,
+    method: 'get'
+  });
+}
+
+/** save job alarm policy */
+export function fetchSaveJobAlarmPolicy(data: Api.SystemManage.JobAlarmPolicy) {
+  return request<number>({
+    url: '/schedule/job/alarm-policy/save',
+    method: 'post',
+    data
+  });
+}
+
+/** get job alarm events */
+export function fetchGetJobAlarmEvents(jobId: number, params?: Api.SystemManage.JobAlarmEventSearchParams) {
+  return request<Api.SystemManage.JobAlarmEventList>({
+    url: `/schedule/job/${jobId}/alarm-events/list`,
+    method: 'post',
+    data: params
+  });
+}
+
+/** get alarm event detail */
+export function fetchGetAlarmEventDetail(eventId: number) {
+  return request<Api.SystemManage.JobAlarmEventDetail>({
+    url: `/schedule/alarm-event/${eventId}`,
+    method: 'get'
+  });
+}

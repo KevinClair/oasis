@@ -153,5 +153,51 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       }
     ]
+  },
+  {
+    name: 'schedule',
+    path: '/schedule',
+    component: 'layout.base',
+    meta: {
+      title: 'schedule',
+      i18nKey: 'route.schedule',
+      icon: 'mdi:calendar-clock',
+      order: 3
+    },
+    children: [
+      {
+        name: 'schedule_job',
+        path: '/schedule/job',
+        component: 'view.schedule_job',
+        meta: {
+          title: 'schedule_job',
+          i18nKey: 'route.schedule_job',
+          icon: 'mdi:clipboard-list-outline',
+          order: 1
+        },
+        children: [
+          {
+            name: 'schedule_job_alarm-events',
+            path: '/schedule/job/alarm-events/:jobId',
+            component: 'view.schedule_job_alarm-events',
+            meta: {
+              title: 'schedule_job_alarm-events',
+              i18nKey: 'route.schedule_job_alarm-events'
+            }
+          }
+        ]
+      },
+      {
+        name: 'schedule_log',
+        path: '/schedule/log',
+        component: 'view.schedule_log',
+        meta: {
+          title: 'schedule_log',
+          i18nKey: 'route.schedule_log',
+          icon: 'mdi:file-document-multiple-outline',
+          order: 2
+        }
+      }
+    ]
   }
 ];

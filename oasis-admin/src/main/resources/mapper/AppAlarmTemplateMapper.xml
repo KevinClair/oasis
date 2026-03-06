@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.AppAlarmTemplateDao">
+
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.AppAlarmTemplate">
+        <id column="id" property="id"/>
+        <result column="app_code" property="appCode"/>
+        <result column="receivers" property="receivers"/>
+        <result column="channels" property="channels"/>
+        <result column="quiet_period_minutes" property="quietPeriodMinutes"/>
+        <result column="fail_threshold" property="failThreshold"/>
+        <result column="timeout_seconds" property="timeoutSeconds"/>
+        <result column="enabled" property="enabled"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectByAppCode" resultMap="BaseResultMap">
+        SELECT id, app_code, receivers, channels, quiet_period_minutes, fail_threshold, timeout_seconds, enabled, create_time, update_time
+        FROM app_alarm_template
+        WHERE app_code = #{appCode}
+    </select>
+
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.AppAlarmTemplate">
+        INSERT INTO app_alarm_template (
+            app_code, receivers, channels, quiet_period_minutes, fail_threshold, timeout_seconds, enabled, create_time, update_time
+        ) VALUES (
+            #{appCode}, #{receivers}, #{channels}, #{quietPeriodMinutes}, #{failThreshold}, #{timeoutSeconds}, #{enabled}, NOW(), NOW()
+        )
+    </insert>
+
+    <update id="updateByAppCode" parameterType="com.github.kevin.oasis.models.entity.AppAlarmTemplate">
+        UPDATE app_alarm_template
+        SET receivers = #{receivers},
+            channels = #{channels},
+            quiet_period_minutes = #{quietPeriodMinutes},
+            fail_threshold = #{failThreshold},
+            timeout_seconds = #{timeoutSeconds},
+            enabled = #{enabled},
+            update_time = NOW()
+        WHERE app_code = #{appCode}
+    </update>
+
+</mapper>

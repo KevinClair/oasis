@@ -236,7 +236,11 @@ const local: App.I18n.Schema = {
     'manage_user-detail': 'User Detail',
     manage_role: 'Role Manage',
     manage_menu: 'Menu Manage',
-    manage_announcement: 'Announcement Manage'
+    manage_announcement: 'Announcement Manage',
+    schedule: 'Scheduler',
+    schedule_job: 'Job Manage',
+    schedule_log: 'Schedule Logs',
+    'schedule_job-alarm-events': 'Job Alarm Events'
   },
   page: {
     login: {

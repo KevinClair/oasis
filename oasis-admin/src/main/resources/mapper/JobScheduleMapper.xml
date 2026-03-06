@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.JobScheduleDao">
+
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.JobSchedule">
+        <id column="id" property="id"/>
+        <result column="job_id" property="jobId"/>
+        <result column="shard_id" property="shardId"/>
+        <result column="next_trigger_time" property="nextTriggerTime"/>
+        <result column="misfire_strategy" property="misfireStrategy"/>
+        <result column="trigger_status" property="triggerStatus"/>
+        <result column="version" property="version"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectByJobId" resultMap="BaseResultMap">
+        SELECT id, job_id, shard_id, next_trigger_time, misfire_strategy, trigger_status, version, create_time, update_time
+        FROM job_schedule
+        WHERE job_id = #{jobId}
+    </select>
+
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.JobSchedule" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO job_schedule (
+            job_id, shard_id, next_trigger_time, misfire_strategy, trigger_status, version, create_time, update_time
+        ) VALUES (
+            #{jobId}, #{shardId}, #{nextTriggerTime}, #{misfireStrategy}, #{triggerStatus}, #{version}, NOW(), NOW()
+        )
+    </insert>
+
+    <update id="updateByJobId" parameterType="com.github.kevin.oasis.models.entity.JobSchedule">
+        UPDATE job_schedule
+        SET shard_id = #{shardId},
+            next_trigger_time = #{nextTriggerTime},
+            misfire_strategy = #{misfireStrategy},
+            trigger_status = #{triggerStatus},
+            version = version + 1,
+            update_time = NOW()
+        WHERE job_id = #{jobId}
+    </update>
+
+    <update id="updateTriggerStatusByJobIds">
+        UPDATE job_schedule
+        SET trigger_status = #{status},
+            update_time = NOW()
+        WHERE job_id IN
+        <foreach collection="jobIds" item="jobId" open="(" separator="," close=")">
+            #{jobId}
+        </foreach>
+    </update>
+
+</mapper>

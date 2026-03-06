@@ -232,7 +232,11 @@ const local: App.I18n.Schema = {
     'manage_user-detail': '用户详情',
     manage_role: '角色管理',
     manage_menu: '菜单管理',
-    manage_announcement: '公告管理'
+    manage_announcement: '公告管理',
+    schedule: '调度中心',
+    schedule_job: '任务管理',
+    schedule_log: '调度日志',
+    'schedule_job-alarm-events': '任务告警事件'
   },
   page: {
     login: {

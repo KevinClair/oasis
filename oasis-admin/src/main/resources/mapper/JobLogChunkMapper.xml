@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.JobLogChunkDao">
+
+    <insert id="upsert" parameterType="com.github.kevin.oasis.models.entity.JobLogChunk">
+        INSERT INTO job_log_chunk (fire_log_id, seq_no, log_time, log_content, create_time)
+        VALUES (#{fireLogId}, #{seqNo}, #{logTime}, #{logContent}, NOW())
+        ON DUPLICATE KEY UPDATE
+            log_time = VALUES(log_time),
+            log_content = VALUES(log_content)
+    </insert>
+
+</mapper>

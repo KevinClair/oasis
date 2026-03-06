@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.JobAlarmEventDao">
+
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.JobAlarmEvent">
+        <id column="id" property="id"/>
+        <result column="job_id" property="jobId"/>
+        <result column="fire_log_id" property="fireLogId"/>
+        <result column="alarm_type" property="alarmType"/>
+        <result column="alarm_content" property="alarmContent"/>
+        <result column="notify_status" property="notifyStatus"/>
+        <result column="trigger_time" property="triggerTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectEventList" resultType="com.github.kevin.oasis.models.vo.schedule.JobAlarmEventVO">
+        SELECT
+            e.id,
+            e.job_id AS jobId,
+            e.fire_log_id AS fireLogId,
+            e.alarm_type AS alarmType,
+            e.alarm_content AS alarmContent,
+            e.notify_status AS notifyStatus,
+            e.trigger_time AS triggerTime,
+            (
+                SELECT GROUP_CONCAT(DISTINCT r.channel ORDER BY r.channel SEPARATOR ',')
+                FROM job_alarm_notify_record r
+                WHERE r.alarm_event_id = e.id
+            ) AS notifyChannels
+        FROM job_alarm_event e
+        WHERE e.job_id = #{jobId}
+        <if test="request.alarmType != null and request.alarmType != ''">
+            AND e.alarm_type = #{request.alarmType}
+        </if>
+        <if test="request.notifyStatus != null and request.notifyStatus != ''">
+            AND e.notify_status = #{request.notifyStatus}
+        </if>
+        ORDER BY e.trigger_time DESC
+        <if test="request.current != null and request.size != null">
+            LIMIT #{request.size} OFFSET ${(request.current - 1) * request.size}
+        </if>
+    </select>
+
+    <select id="countEventList" resultType="long">
+        SELECT COUNT(*)
+        FROM job_alarm_event e
+        WHERE e.job_id = #{jobId}
+        <if test="request.alarmType != null and request.alarmType != ''">
+            AND e.alarm_type = #{request.alarmType}
+        </if>
+        <if test="request.notifyStatus != null and request.notifyStatus != ''">
+            AND e.notify_status = #{request.notifyStatus}
+        </if>
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT id, job_id, fire_log_id, alarm_type, alarm_content, notify_status, trigger_time, create_time, update_time
+        FROM job_alarm_event
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.JobAlarmEvent" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO job_alarm_event (
+            job_id, fire_log_id, alarm_type, alarm_content, notify_status, trigger_time, create_time, update_time
+        ) VALUES (
+            #{jobId}, #{fireLogId}, #{alarmType}, #{alarmContent}, #{notifyStatus}, #{triggerTime}, NOW(), NOW()
+        )
+    </insert>
+
+</mapper>

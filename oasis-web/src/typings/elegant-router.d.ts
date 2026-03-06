@@ -30,6 +30,10 @@ declare module "@elegant-router/types" {
     "manage_role": "/manage/role";
     "manage_user": "/manage/user";
     "manage_user-detail": "/manage/user-detail/:id";
+    "schedule": "/schedule";
+    "schedule_job": "/schedule/job";
+    "schedule_job_alarm-events": "/schedule/job/alarm-events/:jobId";
+    "schedule_log": "/schedule/log";
   };
 
   /**
@@ -69,6 +73,7 @@ declare module "@elegant-router/types" {
     | "iframe-page"
     | "login"
     | "manage"
+    | "schedule"
   >;
 
   /**
@@ -97,6 +102,9 @@ declare module "@elegant-router/types" {
     | "manage_role"
     | "manage_user-detail"
     | "manage_user"
+    | "schedule_job_alarm-events"
+    | "schedule_job"
+    | "schedule_log"
   >;
 
   /**

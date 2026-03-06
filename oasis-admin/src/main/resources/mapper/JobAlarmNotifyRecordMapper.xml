@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.JobAlarmNotifyRecordDao">
+
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.JobAlarmNotifyRecord">
+        <id column="id" property="id"/>
+        <result column="alarm_event_id" property="alarmEventId"/>
+        <result column="channel" property="channel"/>
+        <result column="receiver" property="receiver"/>
+        <result column="send_status" property="sendStatus"/>
+        <result column="response_message" property="responseMessage"/>
+        <result column="send_time" property="sendTime"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <select id="selectByAlarmEventId" resultMap="BaseResultMap">
+        SELECT id, alarm_event_id, channel, receiver, send_status, response_message, send_time, create_time
+        FROM job_alarm_notify_record
+        WHERE alarm_event_id = #{alarmEventId}
+        ORDER BY id DESC
+    </select>
+
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.JobAlarmNotifyRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO job_alarm_notify_record (
+            alarm_event_id, channel, receiver, send_status, response_message, send_time, create_time
+        ) VALUES (
+            #{alarmEventId}, #{channel}, #{receiver}, #{sendStatus}, #{responseMessage}, #{sendTime}, NOW()
+        )
+    </insert>
+
+</mapper>

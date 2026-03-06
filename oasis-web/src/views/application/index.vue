@@ -8,6 +8,7 @@ import { useAppStore } from '@/store/modules/app';
 import ApplicationOperateDrawer from './modules/application-operate-drawer.vue';
 import ApplicationSearch from './modules/application-search.vue';
 import RegistrationNodesModal from './modules/registration-nodes-modal.vue';
+import ApplicationAlarmTemplateModal from './modules/application-alarm-template-modal.vue';
 
 const appStore = useAppStore();
 
@@ -21,6 +22,7 @@ const searchParams: Api.SystemManage.ApplicationSearchParams = reactive({
 
 const nodesModalVisible = ref(false);
 const selectedAppCode = ref<string>('');
+const alarmTemplateVisible = ref(false);
 const appKeyVisibleMap = ref<Record<number, boolean>>({});
 
 function toggleAppKeyVisible(id: number) {
@@ -182,11 +184,14 @@ const { columns, columnChecks, data, getData, getDataByPage, loading, mobilePagi
       key: 'operate',
       title: $t('common.operate'),
       align: 'center',
-      width: 260,
+      width: 360,
       render: row => (
         <div class="flex-center gap-8px">
           <NButton type="info" ghost size="small" onClick={() => viewNodes(row.appCode)}>
             {$t('page.manage.application.viewRegistrationNodes')}
+          </NButton>
+          <NButton type="warning" ghost size="small" onClick={() => editAlarmTemplate(row.appCode)}>
+            告警模板
           </NButton>
           <NButton type="primary" ghost size="small" onClick={() => edit(row.id)}>
             {$t('common.edit')}
@@ -235,6 +240,11 @@ function edit(id: number) {
 function viewNodes(appCode: string) {
   selectedAppCode.value = appCode;
   nodesModalVisible.value = true;
+}
+
+function editAlarmTemplate(appCode: string) {
+  selectedAppCode.value = appCode;
+  alarmTemplateVisible.value = true;
 }
 </script>
 
@@ -299,6 +309,11 @@ function viewNodes(appCode: string) {
       <RegistrationNodesModal
         v-model:visible="nodesModalVisible"
         :app-code="selectedAppCode"
+      />
+      <ApplicationAlarmTemplateModal
+        v-model:visible="alarmTemplateVisible"
+        :app-code="selectedAppCode"
+        @submitted="getData"
       />
     </NCard>
   </div>
