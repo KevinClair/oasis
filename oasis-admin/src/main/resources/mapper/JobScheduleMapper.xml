@@ -49,4 +49,25 @@
         </foreach>
     </update>
 
+    <select id="selectDueSchedules" resultMap="BaseResultMap">
+        SELECT id, job_id, shard_id, next_trigger_time, misfire_strategy, trigger_status, version, create_time, update_time
+        FROM job_schedule
+        WHERE trigger_status = 1
+          AND next_trigger_time <![CDATA[ <= ]]> #{nowTime}
+        ORDER BY next_trigger_time ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="claimAndUpdateNextTrigger">
+        UPDATE job_schedule
+        SET next_trigger_time = #{nextTriggerTime},
+            trigger_status = #{triggerStatus},
+            version = version + 1,
+            update_time = NOW()
+        WHERE job_id = #{jobId}
+          AND version = #{expectedVersion}
+          AND next_trigger_time = #{expectedNextTriggerTime}
+          AND trigger_status = 1
+    </update>
+
 </mapper>

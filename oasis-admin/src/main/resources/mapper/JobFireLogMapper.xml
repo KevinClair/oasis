@@ -108,4 +108,15 @@
         WHERE id = #{log.id}
     </update>
 
+    <update id="updateDispatch">
+        UPDATE job_fire_log
+        SET status = #{log.status},
+            attempt_no = #{log.attemptNo},
+            executor_address = #{log.executorAddress},
+            error_message = #{log.errorMessage},
+            finish_time = #{log.finishTime},
+            update_time = NOW()
+        WHERE id = #{log.id}
+    </update>
+
 </mapper>

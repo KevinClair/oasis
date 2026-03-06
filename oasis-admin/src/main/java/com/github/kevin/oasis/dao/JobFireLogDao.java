@@ -20,4 +20,6 @@ public interface JobFireLogDao {
     JobLogVO selectLogDetailById(@Param("id") Long id);
 
     int updateResult(@Param("log") JobFireLog log);
+
+    int updateDispatch(@Param("log") JobFireLog log);
 }

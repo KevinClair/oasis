@@ -236,7 +236,7 @@ const local: App.I18n.Schema = {
     schedule: '调度中心',
     schedule_job: '任务管理',
     schedule_log: '调度日志',
-    'schedule_job-alarm-events': '任务告警事件'
+    'schedule_job_alarm-events': '任务告警事件'
   },
   page: {
     login: {

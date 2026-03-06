@@ -16,4 +16,12 @@ public interface JobScheduleDao {
     int updateByJobId(JobSchedule schedule);
 
     int updateTriggerStatusByJobIds(@Param("jobIds") List<Long> jobIds, @Param("status") Boolean status);
+
+    List<JobSchedule> selectDueSchedules(@Param("nowTime") Long nowTime, @Param("limit") Integer limit);
+
+    int claimAndUpdateNextTrigger(@Param("jobId") Long jobId,
+                                  @Param("expectedVersion") Long expectedVersion,
+                                  @Param("expectedNextTriggerTime") Long expectedNextTriggerTime,
+                                  @Param("nextTriggerTime") Long nextTriggerTime,
+                                  @Param("triggerStatus") Boolean triggerStatus);
 }

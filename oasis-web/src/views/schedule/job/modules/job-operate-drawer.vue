@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { $t } from '@/locales';
-import { fetchSaveScheduleJob } from '@/service/api';
+import { fetchGetJobAlarmPolicy, fetchSaveJobAlarmPolicy, fetchSaveScheduleJob } from '@/service/api';
 
 interface Props {
   visible: boolean;
@@ -34,9 +34,27 @@ const formModel = reactive<Api.SystemManage.ScheduleJobEdit>({
   alarmInheritApp: true
 });
 
+const receiverText = ref('');
+const channelOptions = [
+  { label: '邮件', value: 'EMAIL' },
+  { label: '站内信', value: 'INBOX' },
+  { label: 'Webhook', value: 'WEBHOOK' }
+];
+
+const alarmPolicyModel = reactive<Api.SystemManage.JobAlarmPolicy>({
+  jobId: 0,
+  inheritAppTemplate: true,
+  receivers: [],
+  channels: [],
+  quietPeriodMinutes: 10,
+  failThreshold: 1,
+  timeoutSeconds: 30,
+  enabled: true
+});
+
 watch(
   () => props.visible,
-  visible => {
+  async visible => {
     if (!visible) return;
 
     if (props.operateType === 'edit' && props.rowData) {
@@ -52,6 +70,19 @@ watch(
       formModel.timeoutSeconds = props.rowData.timeoutSeconds;
       formModel.status = props.rowData.status ?? true;
       formModel.alarmInheritApp = props.rowData.alarmInheritApp ?? true;
+
+      const { data: policyData, error } = await fetchGetJobAlarmPolicy(props.rowData.id);
+      if (!error && policyData) {
+        alarmPolicyModel.jobId = props.rowData.id;
+        alarmPolicyModel.inheritAppTemplate = policyData.inheritAppTemplate;
+        alarmPolicyModel.receivers = policyData.receivers || [];
+        alarmPolicyModel.channels = policyData.channels || [];
+        alarmPolicyModel.quietPeriodMinutes = policyData.quietPeriodMinutes ?? 10;
+        alarmPolicyModel.failThreshold = policyData.failThreshold ?? 1;
+        alarmPolicyModel.timeoutSeconds = policyData.timeoutSeconds ?? 30;
+        alarmPolicyModel.enabled = policyData.enabled;
+        receiverText.value = alarmPolicyModel.receivers.join(',');
+      }
       return;
     }
 
@@ -67,6 +98,33 @@ watch(
     formModel.timeoutSeconds = 30;
     formModel.status = true;
     formModel.alarmInheritApp = true;
+
+    alarmPolicyModel.jobId = 0;
+    alarmPolicyModel.inheritAppTemplate = true;
+    alarmPolicyModel.receivers = [];
+    alarmPolicyModel.channels = [];
+    alarmPolicyModel.quietPeriodMinutes = 10;
+    alarmPolicyModel.failThreshold = 1;
+    alarmPolicyModel.timeoutSeconds = 30;
+    alarmPolicyModel.enabled = true;
+    receiverText.value = '';
+  }
+);
+
+watch(
+  () => formModel.alarmInheritApp,
+  value => {
+    alarmPolicyModel.inheritAppTemplate = value ?? true;
+  }
+);
+
+watch(
+  () => receiverText.value,
+  value => {
+    alarmPolicyModel.receivers = value
+      .split(',')
+      .map(item => item.trim())
+      .filter(Boolean);
   }
 );
 
@@ -90,8 +148,15 @@ const blockStrategyOptions = [
 ];
 
 async function onSubmit() {
-  const { error } = await fetchSaveScheduleJob(formModel);
+  const { data: jobId, error } = await fetchSaveScheduleJob(formModel);
   if (error) return;
+
+  if (jobId) {
+    alarmPolicyModel.jobId = jobId;
+    alarmPolicyModel.inheritAppTemplate = formModel.alarmInheritApp ?? true;
+    const { error: policyError } = await fetchSaveJobAlarmPolicy(alarmPolicyModel);
+    if (policyError) return;
+  }
 
   window.$message?.success($t('common.updateSuccess'));
   emit('submitted');
@@ -138,6 +203,61 @@ async function onSubmit() {
           </NFormItemGi>
           <NFormItemGi label="继承应用告警" path="alarmInheritApp">
             <NSwitch v-model:value="formModel.alarmInheritApp" />
+          </NFormItemGi>
+        </NGrid>
+
+        <NDivider title-placement="left">告警策略</NDivider>
+        <NGrid :cols="2" :x-gap="12">
+          <NFormItemGi label="继承应用模板" path="alarmInheritApp">
+            <NSwitch v-model:value="formModel.alarmInheritApp" />
+          </NFormItemGi>
+          <NFormItemGi label="启用告警" path="alarmEnabled">
+            <NSwitch v-model:value="alarmPolicyModel.enabled" :disabled="formModel.alarmInheritApp" />
+          </NFormItemGi>
+        </NGrid>
+        <NFormItem label="接收人(逗号分隔)">
+          <NInput
+            v-model:value="receiverText"
+            :disabled="formModel.alarmInheritApp"
+            placeholder="如: zhangsan,lisi"
+          />
+        </NFormItem>
+        <NFormItem label="通知方式">
+          <NSelect
+            v-model:value="alarmPolicyModel.channels"
+            multiple
+            :disabled="formModel.alarmInheritApp"
+            :options="channelOptions"
+            placeholder="请选择通知方式"
+          />
+        </NFormItem>
+        <NGrid :cols="3" :x-gap="12">
+          <NFormItemGi label="静默周期(分)">
+            <NInputNumber
+              v-model:value="alarmPolicyModel.quietPeriodMinutes"
+              :disabled="formModel.alarmInheritApp"
+              :min="1"
+              :max="1440"
+              class="w-full"
+            />
+          </NFormItemGi>
+          <NFormItemGi label="失败阈值">
+            <NInputNumber
+              v-model:value="alarmPolicyModel.failThreshold"
+              :disabled="formModel.alarmInheritApp"
+              :min="1"
+              :max="100"
+              class="w-full"
+            />
+          </NFormItemGi>
+          <NFormItemGi label="超时(秒)">
+            <NInputNumber
+              v-model:value="alarmPolicyModel.timeoutSeconds"
+              :disabled="formModel.alarmInheritApp"
+              :min="1"
+              :max="3600"
+              class="w-full"
+            />
           </NFormItemGi>
         </NGrid>
       </NForm>

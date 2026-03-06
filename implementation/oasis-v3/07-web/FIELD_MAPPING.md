@@ -9,8 +9,12 @@
 ## 任务告警策略
 - jobId -> `job_alarm_policy.job_id`
 - inheritAppTemplate -> `job_alarm_policy.inherit_app_template`
-- overrideChannels -> `job_alarm_policy.channels`
+- receivers -> `job_alarm_policy.receivers`
+- channels -> `job_alarm_policy.channels`
+- enabled -> `job_alarm_policy.enabled`
+- quietPeriodMinutes -> `job_alarm_policy.quiet_period_minutes`
 - failThreshold -> `job_alarm_policy.fail_threshold`
+- timeoutSeconds -> `job_alarm_policy.timeout_seconds`
 
 ## 告警事件
 - jobId -> `job_alarm_event.job_id`
@@ -36,3 +40,6 @@
 - finishTime -> `job_fire_log.finish_time`
 - executorAddress -> `job_fire_log.executor_address`
 - traceId -> `job_fire_log.trace_id`
+- detailDrawer.logId -> `job_fire_log.id`
+- detailDrawer.errorMessage -> `job_fire_log.error_message`
+- detailDrawer.attemptNo -> `job_fire_log.attempt_no`

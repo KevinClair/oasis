@@ -4,23 +4,28 @@
 `oasis.scheduler`
 
 ## 配置项
-- `oasis.scheduler.enabled`: 是否启用 starter
-- `oasis.scheduler.app-code`: 应用编码
-- `oasis.scheduler.app-key`: 应用密钥
-- `oasis.scheduler.admin.base-url`: Admin 地址
-- `oasis.scheduler.admin.connect-timeout-ms`: 连接超时
-- `oasis.scheduler.admin.read-timeout-ms`: 读取超时
-- `oasis.scheduler.server.port`: 客户端接收端口
-- `oasis.scheduler.server.context-path`: 客户端上下文
-- `oasis.scheduler.heartbeat.interval-ms`: 心跳间隔
-- `oasis.scheduler.heartbeat.miss-threshold`: 丢失阈值
-- `oasis.scheduler.worker.core-size`: 执行线程池核心线程
-- `oasis.scheduler.worker.max-size`: 执行线程池最大线程
-- `oasis.scheduler.worker.queue-capacity`: 执行队列大小
-- `oasis.scheduler.callback.batch-size`: 回调批次大小
-- `oasis.scheduler.callback.flush-interval-ms`: 回调刷新周期
-- `oasis.scheduler.security.sign-algorithm`: 签名算法
-- `oasis.scheduler.security.clock-skew-ms`: 时间偏移容忍
+- `oasis.scheduler.enabled`: 是否启用 starter（默认 `true`）
+- `oasis.scheduler.app-code`: 应用编码（必填，需先在 Admin 创建并启用）
+- `oasis.scheduler.app-key`: 应用密钥（必填）
+- `oasis.scheduler.admin.base-url`: Admin 地址（默认 `http://127.0.0.1:8080`）
+- `oasis.scheduler.admin.connect-timeout-ms`: 注册/回调连接超时（默认 `2000`）
+- `oasis.scheduler.admin.read-timeout-ms`: 注册/回调读取超时（默认 `3000`）
+- `oasis.scheduler.server.port`: 客户端接收端口（默认 `19091`）
+- `oasis.scheduler.server.context-path`: 客户端上下文（默认 `/oasis-executor`）
+- `oasis.scheduler.heartbeat.interval-ms`: 心跳间隔（默认 `2000`）
+- `oasis.scheduler.heartbeat.miss-threshold`: 丢失阈值（默认 `2`，一期预留）
+- `oasis.scheduler.worker.core-size`: 执行线程池核心线程（默认 `4`）
+- `oasis.scheduler.worker.max-size`: 执行线程池最大线程（默认 `16`）
+- `oasis.scheduler.worker.queue-capacity`: 执行队列大小（默认 `1000`）
+- `oasis.scheduler.callback.batch-size`: 回调批次大小（默认 `100`，一期预留）
+- `oasis.scheduler.callback.flush-interval-ms`: 回调刷新周期（默认 `1000`，一期预留）
+- `oasis.scheduler.security.sign-algorithm`: 签名算法（默认 `HMAC-SHA256`）
+- `oasis.scheduler.security.clock-skew-ms`: 时间偏移容忍（默认 `30000`）
+
+## 行为说明
+- starter 对 Admin 接口成功判定为：HTTP 2xx 且响应体 `code == 0000`。
+- `/invoke` 接口由 starter 内置提供，Admin 默认访问地址：
+  - `http://{executorAddress}{context-path}/invoke`
 
 ## 示例
 ```yaml
@@ -39,4 +44,8 @@ oasis:
     heartbeat:
       interval-ms: 2000
       miss-threshold: 2
+    worker:
+      core-size: 4
+      max-size: 16
+      queue-capacity: 1000
 ```

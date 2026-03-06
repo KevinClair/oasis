@@ -240,7 +240,7 @@ const local: App.I18n.Schema = {
     schedule: 'Scheduler',
     schedule_job: 'Job Manage',
     schedule_log: 'Schedule Logs',
-    'schedule_job-alarm-events': 'Job Alarm Events'
+    'schedule_job_alarm-events': 'Job Alarm Events'
   },
   page: {
     login: {

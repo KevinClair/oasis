@@ -21,6 +21,15 @@
           AND address = #{address}
     </select>
 
+    <select id="selectOnlineByAppCode" resultMap="BaseResultMap">
+        SELECT id, app_code, address, machine_tag, status, last_heartbeat_time, meta_json, create_time, update_time
+        FROM executor_node
+        WHERE app_code = #{appCode}
+          AND status = 'ONLINE'
+          AND last_heartbeat_time <![CDATA[ >= ]]> #{heartbeatAfter}
+        ORDER BY update_time DESC, id ASC
+    </select>
+
     <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.ExecutorNode" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO executor_node (
             app_code, address, machine_tag, status, last_heartbeat_time, meta_json, create_time, update_time
@@ -38,6 +47,14 @@
             update_time = NOW()
         WHERE app_code = #{appCode}
           AND address = #{address}
+    </update>
+
+    <update id="markOfflineByHeartbeatBefore">
+        UPDATE executor_node
+        SET status = 'OFFLINE',
+            update_time = NOW()
+        WHERE status = 'ONLINE'
+          AND last_heartbeat_time <![CDATA[ < ]]> #{heartbeatBefore}
     </update>
 
 </mapper>

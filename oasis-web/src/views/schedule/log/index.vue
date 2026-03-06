@@ -1,9 +1,9 @@
 <script setup lang="tsx">
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { NTag } from 'naive-ui';
+import { NButton, NTag } from 'naive-ui';
 import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
-import { fetchGetScheduleLogList } from '@/service/api';
+import { fetchGetScheduleLogDetail, fetchGetScheduleLogList } from '@/service/api';
 import { useAppStore } from '@/store/modules/app';
 
 const appStore = useAppStore();
@@ -28,6 +28,10 @@ const statusOptions = [
   { label: 'TIMEOUT', value: 'TIMEOUT' }
 ];
 
+const detailVisible = ref(false);
+const detailLoading = ref(false);
+const detailData = ref<Api.SystemManage.ScheduleLog | null>(null);
+
 const { columns, data, loading, getDataByPage, mobilePagination } = useNaivePaginatedTable({
   api: () => fetchGetScheduleLogList(searchParams),
   transform: response => defaultTransform(response),
@@ -36,7 +40,17 @@ const { columns, data, loading, getDataByPage, mobilePagination } = useNaivePagi
     searchParams.size = params.pageSize;
   },
   columns: () => [
-    { key: 'id', title: '日志ID', align: 'center', width: 100 },
+    {
+      key: 'id',
+      title: '日志ID',
+      align: 'center',
+      width: 100,
+      render: row => (
+        <NButton text type="primary" onClick={() => openDetail(row.id)}>
+          {row.id}
+        </NButton>
+      )
+    },
     { key: 'jobId', title: '任务ID', align: 'center', width: 100 },
     { key: 'appCode', title: '应用编码', align: 'center', width: 130 },
     { key: 'jobName', title: '任务名称', align: 'center', minWidth: 150 },
@@ -81,9 +95,33 @@ const { columns, data, loading, getDataByPage, mobilePagination } = useNaivePagi
       ellipsis: { tooltip: true },
       render: row => row.errorMessage || '-'
     },
-    { key: 'traceId', title: 'TraceId', align: 'center', minWidth: 240 }
+    { key: 'traceId', title: 'TraceId', align: 'center', minWidth: 240 },
+    {
+      key: 'operate',
+      title: '操作',
+      align: 'center',
+      width: 100,
+      render: row => (
+        <NButton type="info" ghost size="small" onClick={() => openDetail(row.id)}>
+          详情
+        </NButton>
+      )
+    }
   ]
 });
+
+async function openDetail(id: number) {
+  detailVisible.value = true;
+  detailLoading.value = true;
+  try {
+    const { data, error } = await fetchGetScheduleLogDetail(id);
+    if (!error && data) {
+      detailData.value = data;
+    }
+  } finally {
+    detailLoading.value = false;
+  }
+}
 
 function resetSearch() {
   searchParams.current = 1;
@@ -136,6 +174,32 @@ function resetSearch() {
         :pagination="mobilePagination"
         class="sm:h-full"
       />
+
+      <NDrawer :show="detailVisible" :width="560" @update:show="detailVisible = $event">
+        <NDrawerContent title="调度日志详情" closable>
+          <NSpin :show="detailLoading">
+            <NDescriptions v-if="detailData" bordered :column="1" label-placement="left">
+              <NDescriptionsItem label="日志ID">{{ detailData.id }}</NDescriptionsItem>
+              <NDescriptionsItem label="任务ID">{{ detailData.jobId }}</NDescriptionsItem>
+              <NDescriptionsItem label="应用编码">{{ detailData.appCode }}</NDescriptionsItem>
+              <NDescriptionsItem label="任务名称">{{ detailData.jobName }}</NDescriptionsItem>
+              <NDescriptionsItem label="触发类型">{{ detailData.triggerType }}</NDescriptionsItem>
+              <NDescriptionsItem label="状态">{{ detailData.status }}</NDescriptionsItem>
+              <NDescriptionsItem label="重试次数">{{ detailData.attemptNo }}</NDescriptionsItem>
+              <NDescriptionsItem label="执行节点">{{ detailData.executorAddress || '-' }}</NDescriptionsItem>
+              <NDescriptionsItem label="TraceId">{{ detailData.traceId || '-' }}</NDescriptionsItem>
+              <NDescriptionsItem label="触发时间">
+                {{ new Date(detailData.triggerTime).toLocaleString('zh-CN') }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="结束时间">
+                {{ detailData.finishTime ? new Date(detailData.finishTime).toLocaleString('zh-CN') : '-' }}
+              </NDescriptionsItem>
+              <NDescriptionsItem label="错误信息">{{ detailData.errorMessage || '-' }}</NDescriptionsItem>
+            </NDescriptions>
+            <NEmpty v-else description="暂无详情数据" />
+          </NSpin>
+        </NDrawerContent>
+      </NDrawer>
     </NCard>
   </div>
 </template>

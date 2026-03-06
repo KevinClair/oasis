@@ -8,7 +8,9 @@ import com.github.kevin.oasis.common.ResponseStatusEnums;
 import com.github.kevin.oasis.dao.*;
 import com.github.kevin.oasis.models.entity.*;
 import com.github.kevin.oasis.models.vo.schedule.*;
+import com.github.kevin.oasis.services.JobTriggerExecutorService;
 import com.github.kevin.oasis.services.ScheduleService;
+import com.github.kevin.oasis.utils.ScheduleNextTimeCalculator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -16,7 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -37,6 +38,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final JobAlarmEventDao jobAlarmEventDao;
     private final JobAlarmNotifyRecordDao jobAlarmNotifyRecordDao;
     private final ApplicationDao applicationDao;
+    private final JobTriggerExecutorService jobTriggerExecutorService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -84,7 +86,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             JobSchedule schedule = JobSchedule.builder()
                     .jobId(jobInfo.getId())
                     .shardId((int) (jobInfo.getId() % SHARD_COUNT))
-                    .nextTriggerTime(System.currentTimeMillis() + 60_000L)
+                    .nextTriggerTime(computeInitialNextTriggerTime(jobInfo.getScheduleType(), jobInfo.getScheduleConf()))
                     .misfireStrategy("FIRE_ONCE")
                     .triggerStatus(jobInfo.getStatus())
                     .version(0L)
@@ -118,7 +120,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             schedule = JobSchedule.builder()
                     .jobId(exist.getId())
                     .shardId((int) (exist.getId() % SHARD_COUNT))
-                    .nextTriggerTime(System.currentTimeMillis() + 60_000L)
+                    .nextTriggerTime(computeInitialNextTriggerTime(exist.getScheduleType(), exist.getScheduleConf()))
                     .misfireStrategy("FIRE_ONCE")
                     .triggerStatus(exist.getStatus())
                     .version(0L)
@@ -126,7 +128,7 @@ public class ScheduleServiceImpl implements ScheduleService {
             jobScheduleDao.insert(schedule);
         } else {
             schedule.setTriggerStatus(exist.getStatus());
-            schedule.setNextTriggerTime(System.currentTimeMillis() + 60_000L);
+            schedule.setNextTriggerTime(computeInitialNextTriggerTime(exist.getScheduleType(), exist.getScheduleConf()));
             jobScheduleDao.updateByJobId(schedule);
         }
 
@@ -147,19 +149,10 @@ public class ScheduleServiceImpl implements ScheduleService {
         if (jobInfo == null) {
             throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "任务不存在");
         }
-
-        JobFireLog log = JobFireLog.builder()
-                .jobId(jobInfo.getId())
-                .triggerTime(System.currentTimeMillis())
-                .triggerType("MANUAL")
-                .status("PENDING")
-                .attemptNo(1)
-                .traceId(UUID.randomUUID().toString().replace("-", ""))
-                .errorMessage(request.getTriggerParam())
-                .build();
-        jobFireLogDao.insert(log);
-
-        return log.getId();
+        if (Boolean.FALSE.equals(jobInfo.getStatus())) {
+            throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "任务未启用");
+        }
+        return jobTriggerExecutorService.trigger(jobInfo, "MANUAL", request.getTriggerParam(), 1);
     }
 
     @Override
@@ -387,5 +380,11 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     private Integer defaultNumber(Integer value, Integer defaultValue) {
         return value == null ? defaultValue : value;
+    }
+
+    private Long computeInitialNextTriggerTime(String scheduleType, String scheduleConf) {
+        Long now = System.currentTimeMillis();
+        Long next = ScheduleNextTimeCalculator.computeNextTriggerTime(scheduleType, scheduleConf, now);
+        return next == null ? now + 60_000L : next;
     }
 }
