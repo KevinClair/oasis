@@ -20,6 +20,7 @@
 - jobId -> `job_alarm_event.job_id`
 - fireLogId -> `job_alarm_event.fire_log_id`
 - notifyStatus -> `job_alarm_event.notify_status`
+- 告警事件页筛选.jobId -> `job_alarm_event.job_id`（可选）
 
 ## 任务管理页
 - appCode -> `job_info.app_code`

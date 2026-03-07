@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { $t } from '@/locales';
-import { enableStatusBooleanOptions } from '@/constants/business';
+import {computed} from 'vue';
+import {$t} from '@/locales';
+import {enableStatusBooleanOptions} from '@/constants/business';
 
 defineOptions({
   name: 'ApplicationSearch'
@@ -48,7 +48,7 @@ function search() {
         </NFormItemGi>
         <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.application.status')" path="status" class="pr-24px">
           <NSelect
-            v-model:value="model.status"
+            v-model:value="model.status as any"
             :options="statusOptions"
             :placeholder="$t('page.manage.application.form.status')"
             clearable
@@ -76,4 +76,3 @@ function search() {
 </template>
 
 <style scoped></style>
-

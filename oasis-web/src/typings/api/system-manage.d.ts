@@ -467,7 +467,7 @@ declare namespace Api {
     };
 
     type JobAlarmEventSearchParams = CommonType.RecordNullable<
-      Pick<Api.SystemManage.JobAlarmEvent, 'alarmType' | 'notifyStatus'> & CommonSearchParams
+      Pick<Api.SystemManage.JobAlarmEvent, 'alarmType' | 'notifyStatus'> & { jobId: number } & CommonSearchParams
     >;
 
     type JobAlarmEventList = Common.PaginatingQueryRecord<JobAlarmEvent>;

@@ -54,6 +54,52 @@
         </if>
     </select>
 
+    <select id="selectEventListByRequest" resultType="com.github.kevin.oasis.models.vo.schedule.JobAlarmEventVO">
+        SELECT
+        e.id,
+        e.job_id AS jobId,
+        e.fire_log_id AS fireLogId,
+        e.alarm_type AS alarmType,
+        e.alarm_content AS alarmContent,
+        e.notify_status AS notifyStatus,
+        e.trigger_time AS triggerTime,
+        (
+        SELECT GROUP_CONCAT(DISTINCT r.channel ORDER BY r.channel SEPARATOR ',')
+        FROM job_alarm_notify_record r
+        WHERE r.alarm_event_id = e.id
+        ) AS notifyChannels
+        FROM job_alarm_event e
+        WHERE 1 = 1
+        <if test="request.jobId != null">
+            AND e.job_id = #{request.jobId}
+        </if>
+        <if test="request.alarmType != null and request.alarmType != ''">
+            AND e.alarm_type = #{request.alarmType}
+        </if>
+        <if test="request.notifyStatus != null and request.notifyStatus != ''">
+            AND e.notify_status = #{request.notifyStatus}
+        </if>
+        ORDER BY e.trigger_time DESC
+        <if test="request.current != null and request.size != null">
+            LIMIT #{request.size} OFFSET ${(request.current - 1) * request.size}
+        </if>
+    </select>
+
+    <select id="countEventListByRequest" resultType="long">
+        SELECT COUNT(*)
+        FROM job_alarm_event e
+        WHERE 1 = 1
+        <if test="request.jobId != null">
+            AND e.job_id = #{request.jobId}
+        </if>
+        <if test="request.alarmType != null and request.alarmType != ''">
+            AND e.alarm_type = #{request.alarmType}
+        </if>
+        <if test="request.notifyStatus != null and request.notifyStatus != ''">
+            AND e.notify_status = #{request.notifyStatus}
+        </if>
+    </select>
+
     <select id="selectById" resultMap="BaseResultMap">
         SELECT id, job_id, fire_log_id, alarm_type, alarm_content, notify_status, trigger_time, create_time, update_time
         FROM job_alarm_event

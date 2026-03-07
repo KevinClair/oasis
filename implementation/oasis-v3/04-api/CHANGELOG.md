@@ -27,6 +27,11 @@
     - 新增前端调用 `GET /schedule/dispatch/overview`、`POST /schedule/dispatch/list`
 - 回调结果处理增强：
     - `callback/result` 增加 attempt 乱序幂等保护，旧 attempt 回调不再覆盖新 attempt 状态
+- 新增告警事件聚合查询接口：
+    - `POST /schedule/alarm-events/list`（支持按 `jobId` 可选过滤）
+- 调度内核切换为独立时间轮驱动：
+    - `ScheduleTimeWheelDispatcher` 负责预加载与 tick 触发
+    - 扫描器链路保留为 `time-wheel-enabled=false` 兜底模式
 
 ## 2026-03-06
 - 新增调度执行闭环实现（Admin 内核侧）：

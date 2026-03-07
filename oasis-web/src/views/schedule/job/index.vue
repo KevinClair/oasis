@@ -1,15 +1,11 @@
 <script setup lang="tsx">
-import { reactive } from 'vue';
-import { NButton, NPopconfirm, NTag } from 'naive-ui';
-import { useRouter } from 'vue-router';
-import { defaultTransform, useNaivePaginatedTable, useTableOperate } from '@/hooks/common/table';
-import { $t } from '@/locales';
-import {
-  fetchEnableScheduleJobs,
-  fetchGetScheduleJobList,
-  fetchTriggerScheduleJob
-} from '@/service/api';
-import { useAppStore } from '@/store/modules/app';
+import {reactive} from 'vue';
+import {NButton, NPopconfirm, NTag} from 'naive-ui';
+import {useRouter} from 'vue-router';
+import {defaultTransform, useNaivePaginatedTable, useTableOperate} from '@/hooks/common/table';
+import {$t} from '@/locales';
+import {fetchEnableScheduleJobs, fetchGetScheduleJobList, fetchTriggerScheduleJob} from '@/service/api';
+import {useAppStore} from '@/store/modules/app';
 import JobOperateDrawer from './modules/job-operate-drawer.vue';
 
 const appStore = useAppStore();
@@ -121,7 +117,7 @@ async function handleTrigger(id: number) {
 }
 
 function viewAlarmEvents(jobId: number) {
-  router.push(`/schedule/job/alarm-events/${jobId}`);
+  router.push(`/schedule/job/alarm-events?jobId=${jobId}`);
 }
 
 function resetSearch() {

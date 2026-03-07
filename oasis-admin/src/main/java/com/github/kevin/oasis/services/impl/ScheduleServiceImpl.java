@@ -264,14 +264,20 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     @Override
     public JobAlarmEventListResponse getJobAlarmEvents(Long jobId, JobAlarmEventListRequest request) {
-        List<JobAlarmEventVO> records = jobAlarmEventDao.selectEventList(jobId, request);
-        Long total = jobAlarmEventDao.countEventList(jobId, request);
+        request.setJobId(jobId);
+        return getAlarmEvents(request);
+    }
 
+    @Override
+    public JobAlarmEventListResponse getAlarmEvents(JobAlarmEventListRequest request) {
+        normalizeAlarmEventRequest(request);
+        List<JobAlarmEventVO> records = jobAlarmEventDao.selectEventListByRequest(request);
+        Long total = jobAlarmEventDao.countEventListByRequest(request);
         return JobAlarmEventListResponse.builder()
                 .records(records)
                 .current(request.getCurrent())
                 .size(request.getSize())
-                .total(total)
+                .total(total == null ? 0L : total)
                 .build();
     }
 
@@ -438,6 +444,18 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 
     private void normalizeDispatchQueueRequest(DispatchQueueListRequest request) {
+        if (request.getCurrent() == null || request.getCurrent() < 1) {
+            request.setCurrent(1);
+        }
+        if (request.getSize() == null || request.getSize() < 1) {
+            request.setSize(10);
+        }
+        if (request.getSize() > 200) {
+            request.setSize(200);
+        }
+    }
+
+    private void normalizeAlarmEventRequest(JobAlarmEventListRequest request) {
         if (request.getCurrent() == null || request.getCurrent() < 1) {
             request.setCurrent(1);
         }

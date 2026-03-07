@@ -189,7 +189,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         children: [
           {
             name: 'schedule_job_alarm-events',
-            path: '/schedule/job/alarm-events/:jobId',
+            path: '/schedule/job/alarm-events',
             component: 'view.schedule_job_alarm-events',
             meta: {
               title: 'schedule_job_alarm-events',

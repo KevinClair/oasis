@@ -397,6 +397,15 @@ export function fetchGetJobAlarmEvents(jobId: number, params?: Api.SystemManage.
   });
 }
 
+/** get schedule alarm events (global or by jobId) */
+export function fetchGetScheduleAlarmEvents(params?: Api.SystemManage.JobAlarmEventSearchParams) {
+  return request<Api.SystemManage.JobAlarmEventList>({
+    url: '/schedule/alarm-events/list',
+    method: 'post',
+    data: params
+  });
+}
+
 /** get alarm event detail */
 export function fetchGetAlarmEventDetail(eventId: number) {
   return request<Api.SystemManage.JobAlarmEventDetail>({

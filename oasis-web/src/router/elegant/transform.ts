@@ -179,7 +179,7 @@ const routeMap: RouteMap = {
   "schedule": "/schedule",
   "schedule_dispatch": "/schedule/dispatch",
   "schedule_job": "/schedule/job",
-  "schedule_job_alarm-events": "/schedule/job/alarm-events/:jobId",
+  "schedule_job_alarm-events": "/schedule/job/alarm-events",
   "schedule_log": "/schedule/log"
 };
 

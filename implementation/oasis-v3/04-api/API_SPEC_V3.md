@@ -27,6 +27,7 @@
 
 ### 任务告警事件
 - `POST /schedule/job/{jobId}/alarm-events/list`
+- `POST /schedule/alarm-events/list`
 - `GET /schedule/alarm-event/{eventId}`
 
 ## Executor 协议（一期）

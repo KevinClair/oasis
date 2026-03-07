@@ -23,6 +23,15 @@ public interface JobScheduleDao {
                                                  @Param("limit") Integer limit,
                                                  @Param("shardIds") List<Integer> shardIds);
 
+    List<JobSchedule> selectSchedulesInWindow(@Param("startTime") Long startTime,
+                                              @Param("endTime") Long endTime,
+                                              @Param("limit") Integer limit);
+
+    List<JobSchedule> selectSchedulesInWindowByShards(@Param("startTime") Long startTime,
+                                                      @Param("endTime") Long endTime,
+                                                      @Param("limit") Integer limit,
+                                                      @Param("shardIds") List<Integer> shardIds);
+
     int claimAndUpdateNextTrigger(@Param("jobId") Long jobId,
                                   @Param("expectedVersion") Long expectedVersion,
                                   @Param("expectedNextTriggerTime") Long expectedNextTriggerTime,

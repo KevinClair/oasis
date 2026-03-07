@@ -15,6 +15,10 @@ public interface JobAlarmEventDao {
 
     Long countEventList(@Param("jobId") Long jobId, @Param("request") JobAlarmEventListRequest request);
 
+    List<JobAlarmEventVO> selectEventListByRequest(@Param("request") JobAlarmEventListRequest request);
+
+    Long countEventListByRequest(@Param("request") JobAlarmEventListRequest request);
+
     JobAlarmEvent selectById(@Param("id") Long id);
 
     int insert(JobAlarmEvent event);

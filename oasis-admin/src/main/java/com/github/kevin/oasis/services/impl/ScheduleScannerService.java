@@ -38,6 +38,10 @@ public class ScheduleScannerService {
         if (!runtimeProperties.isEnabled()) {
             return;
         }
+        if (runtimeProperties.isTimeWheelEnabled()) {
+            // 时间轮开启时，本扫描器仅作为兜底保留，不再执行全量扫描触发。
+            return;
+        }
 
         long now = System.currentTimeMillis();
         List<JobSchedule> dueSchedules;

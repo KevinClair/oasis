@@ -94,6 +94,12 @@ public class ScheduleController {
         return Response.success(scheduleService.getJobAlarmEvents(jobId, request));
     }
 
+    @PostMapping("/alarm-events/list")
+    @Permission
+    public Response<JobAlarmEventListResponse> getAlarmEvents(@RequestBody JobAlarmEventListRequest request) {
+        return Response.success(scheduleService.getAlarmEvents(request));
+    }
+
     @GetMapping("/alarm-event/{eventId}")
     @Permission
     public Response<JobAlarmEventDetailVO> getAlarmEvent(@PathVariable Long eventId) {

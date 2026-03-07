@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, toRaw } from 'vue';
-import { jsonClone } from '@sa/utils';
-import { enableStatusBooleanOptions, userGenderOptions } from '@/constants/business';
-import { useFormRules, useNaiveForm } from '@/hooks/common/form';
-import { translateOptions } from '@/utils/common';
-import { $t } from '@/locales';
+import {computed, toRaw} from 'vue';
+import {jsonClone} from '@sa/utils';
+import {enableStatusBooleanOptions, userGenderOptions} from '@/constants/business';
+import {useFormRules, useNaiveForm} from '@/hooks/common/form';
+import {translateOptions} from '@/utils/common';
+import {$t} from '@/locales';
 
 defineOptions({
   name: 'UserSearch'
@@ -62,12 +62,7 @@ async function search() {
         <NForm ref="formRef" :model="model" :rules="rules" label-placement="left" :label-width="80">
           <NGrid responsive="screen" item-responsive>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.user.userId')" path="userId" class="pr-24px">
-              <NInputNumber
-                v-model:value="model.userId"
-                :placeholder="$t('page.manage.user.form.userId')"
-                class="w-full"
-                :show-button="false"
-              />
+              <NInput v-model:value="model.userId" :placeholder="$t('page.manage.user.form.userId')"/>
             </NFormItemGi>
             <NFormItemGi span="24 s:12 m:6" :label="$t('page.manage.user.userAccount')" path="userAccount" class="pr-24px">
               <NInput v-model:value="model.userAccount" :placeholder="$t('page.manage.user.form.userAccount')" />

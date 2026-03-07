@@ -26,6 +26,8 @@ public interface ScheduleService {
 
     JobAlarmEventListResponse getJobAlarmEvents(Long jobId, JobAlarmEventListRequest request);
 
+    JobAlarmEventListResponse getAlarmEvents(JobAlarmEventListRequest request);
+
     JobAlarmEventDetailVO getAlarmEventDetail(Long eventId);
 
     DispatchQueueOverviewVO getDispatchQueueOverview();

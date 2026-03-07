@@ -26,6 +26,37 @@ public class SchedulerRuntimeProperties {
     private int scanLimit = 100;
 
     /**
+     * 是否启用独立时间轮调度组件。
+     * 关闭后退化为“分片扫描 + CAS 抢占”的兜底模式。
+     */
+    private boolean timeWheelEnabled = true;
+
+    /**
+     * 时间轮 tick 间隔（毫秒）。
+     */
+    private long timeWheelTickMs = 1000L;
+
+    /**
+     * 时间轮槽位数量。
+     */
+    private int timeWheelSlotCount = 120;
+
+    /**
+     * 时间轮预加载间隔（毫秒）。
+     */
+    private long timeWheelPreloadIntervalMs = 1000L;
+
+    /**
+     * 预加载窗口（毫秒）：仅将未来窗口内任务放入时间轮。
+     */
+    private long timeWheelPreloadWindowMs = 60_000L;
+
+    /**
+     * 预加载批次大小。
+     */
+    private int timeWheelPreloadBatchSize = 2000;
+
+    /**
      * 调度分片总数（需与 job_schedule.shard_id 取值一致）
      */
     private int shardCount = 128;

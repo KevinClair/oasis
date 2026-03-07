@@ -2,6 +2,7 @@
 
 ## 一期后端交付
 - 调度域模型（任务、调度、日志、告警）
+- 独立时间轮调度组件（预加载窗口 + tick 消费）
 - `shard_lease` 分片租约调度能力（租约续约/过期抢占）
 - 分片内数据库扫描 + CAS 抢占调度能力（`job_schedule.version`）
 - 执行器路由下发能力（ROUND/RANDOM/FAILOVER/BROADCAST）

@@ -2,7 +2,7 @@
 
 ## 一期前端交付
 - 任务管理页面 `/schedule/job`
-- 任务告警事件页面 `/schedule/job/:jobId/alarm-events`
+- 任务告警事件页面 `/schedule/job/alarm-events`（支持 `jobId` 筛选）
 - 调度日志页面 `/schedule/log`
 - 补偿队列页面 `/schedule/dispatch`
 - 应用管理页新增默认告警模板编辑

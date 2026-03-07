@@ -1,25 +1,32 @@
 <script setup lang="tsx">
-import { reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { NButton, NTag } from 'naive-ui';
-import { defaultTransform, useNaivePaginatedTable } from '@/hooks/common/table';
-import { fetchGetJobAlarmEvents } from '@/service/api';
-import { useAppStore } from '@/store/modules/app';
+import {reactive} from 'vue';
+import {useRoute, useRouter} from 'vue-router';
+import {NButton, NTag} from 'naive-ui';
+import {defaultTransform, useNaivePaginatedTable} from '@/hooks/common/table';
+import {fetchGetScheduleAlarmEvents} from '@/service/api';
+import {useAppStore} from '@/store/modules/app';
 
 const appStore = useAppStore();
 const route = useRoute();
 const router = useRouter();
-const jobId = Number(route.params.jobId);
+
+function resolveJobId() {
+  const queryValue = route.query.jobId;
+  const raw = Array.isArray(queryValue) ? queryValue[0] : queryValue;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
 
 const searchParams: Api.SystemManage.JobAlarmEventSearchParams = reactive({
   current: 1,
   size: 10,
+  jobId: resolveJobId(),
   alarmType: null,
   notifyStatus: null
 });
 
 const { columns, data, loading, getDataByPage, mobilePagination } = useNaivePaginatedTable({
-  api: () => fetchGetJobAlarmEvents(jobId, searchParams),
+  api: () => fetchGetScheduleAlarmEvents(searchParams),
   transform: response => defaultTransform(response),
   onPaginationParamsChange: params => {
     searchParams.current = params.page;
@@ -90,6 +97,7 @@ const notifyStatusOptions = [
 function resetSearch() {
   searchParams.current = 1;
   searchParams.size = 10;
+  searchParams.jobId = null;
   searchParams.alarmType = null;
   searchParams.notifyStatus = null;
   getDataByPage();
@@ -98,9 +106,13 @@ function resetSearch() {
 
 <template>
   <div class="min-h-500px flex-col-stretch gap-16px overflow-hidden lt-sm:overflow-auto">
-    <NCard :title="`任务 ${jobId} 告警事件`" :bordered="false" size="small" class="card-wrapper">
+    <NCard :title="searchParams.jobId ? `任务 ${searchParams.jobId} 告警事件` : '告警事件'" :bordered="false"
+           size="small" class="card-wrapper">
       <NForm :model="searchParams" label-placement="left" :label-width="90">
         <NGrid responsive="screen" item-responsive>
+          <NFormItemGi span="24 s:12 m:6" label="任务ID" class="pr-24px">
+            <NInputNumber v-model:value="searchParams.jobId" :min="1" clearable class="w-full"/>
+          </NFormItemGi>
           <NFormItemGi span="24 s:12 m:6" label="告警类型" class="pr-24px">
             <NSelect v-model:value="searchParams.alarmType" :options="alarmTypeOptions" clearable />
           </NFormItemGi>
