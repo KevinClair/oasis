@@ -5,12 +5,13 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.kevin.oasis.common.BusinessException;
 import com.github.kevin.oasis.common.ResponseStatusEnums;
+import com.github.kevin.oasis.config.SchedulerRuntimeProperties;
 import com.github.kevin.oasis.dao.*;
 import com.github.kevin.oasis.models.entity.*;
 import com.github.kevin.oasis.models.vo.schedule.*;
 import com.github.kevin.oasis.services.JobTriggerExecutorService;
 import com.github.kevin.oasis.services.ScheduleService;
-import com.github.kevin.oasis.utils.ScheduleNextTimeCalculator;
+import com.github.kevin.oasis.services.strategy.schedule.ScheduleTypeStrategyRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,8 +29,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ScheduleServiceImpl implements ScheduleService {
 
-    private static final int SHARD_COUNT = 128;
-
     private final JobInfoDao jobInfoDao;
     private final JobScheduleDao jobScheduleDao;
     private final JobFireLogDao jobFireLogDao;
@@ -39,6 +38,8 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final JobAlarmNotifyRecordDao jobAlarmNotifyRecordDao;
     private final ApplicationDao applicationDao;
     private final JobTriggerExecutorService jobTriggerExecutorService;
+    private final ScheduleTypeStrategyRegistry scheduleTypeStrategyRegistry;
+    private final SchedulerRuntimeProperties runtimeProperties;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -85,7 +86,7 @@ public class ScheduleServiceImpl implements ScheduleService {
 
             JobSchedule schedule = JobSchedule.builder()
                     .jobId(jobInfo.getId())
-                    .shardId((int) (jobInfo.getId() % SHARD_COUNT))
+                    .shardId(computeShardId(jobInfo.getId()))
                     .nextTriggerTime(computeInitialNextTriggerTime(jobInfo.getScheduleType(), jobInfo.getScheduleConf()))
                     .misfireStrategy("FIRE_ONCE")
                     .triggerStatus(jobInfo.getStatus())
@@ -119,7 +120,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         if (schedule == null) {
             schedule = JobSchedule.builder()
                     .jobId(exist.getId())
-                    .shardId((int) (exist.getId() % SHARD_COUNT))
+                    .shardId(computeShardId(exist.getId()))
                     .nextTriggerTime(computeInitialNextTriggerTime(exist.getScheduleType(), exist.getScheduleConf()))
                     .misfireStrategy("FIRE_ONCE")
                     .triggerStatus(exist.getStatus())
@@ -384,7 +385,12 @@ public class ScheduleServiceImpl implements ScheduleService {
 
     private Long computeInitialNextTriggerTime(String scheduleType, String scheduleConf) {
         Long now = System.currentTimeMillis();
-        Long next = ScheduleNextTimeCalculator.computeNextTriggerTime(scheduleType, scheduleConf, now);
+        Long next = scheduleTypeStrategyRegistry.nextTriggerTime(scheduleType, scheduleConf, now);
         return next == null ? now + 60_000L : next;
+    }
+
+    private Integer computeShardId(Long jobId) {
+        int shardCount = Math.max(1, runtimeProperties.getShardCount());
+        return (int) (jobId % shardCount);
     }
 }

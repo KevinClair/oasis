@@ -11,7 +11,7 @@ public interface ExecutorGatewayService {
 
     boolean heartbeat(ExecutorHeartbeatRequest request);
 
-    boolean callbackResult(ExecutorCallbackResultRequest request);
+    boolean callbackResult(String appCode, ExecutorCallbackResultRequest request);
 
-    boolean callbackLog(ExecutorCallbackLogRequest request);
+    boolean callbackLog(String appCode, ExecutorCallbackLogRequest request);
 }

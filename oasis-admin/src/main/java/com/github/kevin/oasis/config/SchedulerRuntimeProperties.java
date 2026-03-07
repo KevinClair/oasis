@@ -26,6 +26,42 @@ public class SchedulerRuntimeProperties {
     private int scanLimit = 100;
 
     /**
+     * 调度分片总数（需与 job_schedule.shard_id 取值一致）
+     */
+    private int shardCount = 128;
+
+    /**
+     * 是否启用 shard_lease 租约调度。
+     * 关闭后退化为“全节点扫描 + CAS 抢占”。
+     */
+    private boolean shardLeaseEnabled = true;
+
+    /**
+     * 租约续租/分配间隔（毫秒）。
+     */
+    private long shardLeaseRenewIntervalMs = 1000L;
+
+    /**
+     * 租约有效期（毫秒）。
+     */
+    private long shardLeaseDurationMs = 5000L;
+
+    /**
+     * scheduler_node 心跳间隔（毫秒）。
+     */
+    private long schedulerNodeHeartbeatIntervalMs = 1000L;
+
+    /**
+     * 调度节点心跳超时阈值（毫秒）。
+     */
+    private long schedulerNodeHeartbeatTimeoutMs = 5000L;
+
+    /**
+     * 调度节点对外端口（仅写入 scheduler_node 表用于可观测性）。
+     */
+    private int schedulerNodePort = 8080;
+
+    /**
      * 执行器心跳超时阈值（毫秒）
      */
     private long executorHeartbeatTimeoutMs = 10_000L;
@@ -49,4 +85,49 @@ public class SchedulerRuntimeProperties {
      * 执行器默认 context path
      */
     private String executorContextPath = "/oasis-executor";
+
+    /**
+     * 是否开启执行器接口 HMAC 鉴权
+     */
+    private boolean executorAuthEnabled = true;
+
+    /**
+     * 执行器请求时间偏移容忍值（毫秒）
+     */
+    private long executorAuthClockSkewMs = 30_000L;
+
+    /**
+     * nonce 过期时间（毫秒）
+     */
+    private long executorAuthNonceExpireMs = 120_000L;
+
+    /**
+     * nonce 本地缓存上限
+     */
+    private int executorAuthNonceMaxSize = 20_000;
+
+    /**
+     * dispatch_queue 异步重试开关
+     */
+    private boolean dispatchRetryEnabled = true;
+
+    /**
+     * dispatch_queue 扫描间隔（毫秒）
+     */
+    private long dispatchRetryIntervalMs = 1000L;
+
+    /**
+     * 每次最多处理多少条重试任务
+     */
+    private int dispatchRetryBatchSize = 100;
+
+    /**
+     * 重试基础退避时长（毫秒）
+     */
+    private long dispatchRetryBackoffMs = 3000L;
+
+    /**
+     * 重试最大退避时长（毫秒）
+     */
+    private long dispatchRetryMaxBackoffMs = 60000L;
 }

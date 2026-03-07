@@ -1,5 +1,23 @@
 # API CHANGELOG
 
+## 2026-03-07
+- 完成 Admin -> Executor 下发请求签名：
+  - `ExecutorDispatchServiceImpl` 下发 `/invoke` 时增加 `X-Oasis-*` 头
+  - 签名算法与 executor -> admin 保持一致（HMAC-SHA256）
+- 完成 Executor 侧 `/invoke` 验签：
+  - starter 内置 Netty HTTP Server 校验时间窗、nonce、防重放、签名
+  - 增加可配置开关 `oasis.scheduler.server.verify-invoke-signature`
+- 完成 `dispatch_queue` 异步重试与失败补偿：
+  - 下发失败任务进入 `dispatch_queue(PENDING)`
+  - 异步重试成功后回写 `job_fire_log(RUNNING)`
+  - 超过阈值标记 `dispatch_queue(DEAD)` 并补偿为最终失败
+- 完成 `shard_lease` 分片租约优化：
+  - Admin 节点心跳写入 `scheduler_node`
+  - 仅扫描本节点持有租约的分片任务
+- 模式分支重构为 Spring 策略模式：
+  - 调度类型策略：`CRON / FIXED_DELAY / ONCE`
+  - 路由策略：`ROUND / RANDOM / FAILOVER / BROADCAST`
+
 ## 2026-03-06
 - 新增调度执行闭环实现（Admin 内核侧）：
   - 调度扫描器：按 `job_schedule.next_trigger_time` 扫描到期任务并触发
@@ -12,6 +30,13 @@
 - Starter 协议处理增强：
   - 客户端调用 Admin 后不再仅看 HTTP 200；改为校验响应 `code == 0000`
   - `RestTemplate` 增加连接/读取超时配置生效
+- 新增 Admin 侧执行器 HMAC 验签闭环：
+  - 校验头：`X-Oasis-App-Code`、`X-Oasis-Timestamp`、`X-Oasis-Nonce`、`X-Oasis-Signature`
+  - 时间窗校验、nonce 防重放、签名校验
+  - 回调接口增加 `fireLog` 归属校验，防止跨应用回调篡改
+- Starter 接收端改造：
+  - 移除 Spring MVC `Controller` 接收 `/invoke`
+  - 改为内置 Netty HTTP Server 处理 `/invoke`
 
 ## 2026-03-04
 - 初始化 V3 API 文档与协议边界。

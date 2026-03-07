@@ -5,7 +5,7 @@
 
 ## 职责
 - 客户端注册与心跳
-- 接收调度请求并执行任务
+- 内置 Netty HTTP Server 接收调度请求并执行任务
 - 回调执行结果与日志
 - 优雅停机（drain）
 - HMAC 请求签名（发送侧）
@@ -23,3 +23,4 @@
 - 管理端回包判定：`HTTP 2xx` 且 `code == 0000` 才算成功。
 - Admin 调用客户端入口默认：`POST {context-path}/invoke`。
 - 客户端执行线程池支持 `core/max/queue` 配置。
+- `/invoke` 默认开启 HMAC 验签（时间窗 + nonce 防重放）。

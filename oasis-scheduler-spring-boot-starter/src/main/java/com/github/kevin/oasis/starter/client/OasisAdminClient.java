@@ -52,6 +52,7 @@ public class OasisAdminClient {
         String url = properties.getAdmin().getBaseUrl() + path;
         try {
             String jsonBody = objectMapper.writeValueAsString(body);
+            // 所有请求都使用 appKey 对 method/path/bodyHash 进行 HMAC 签名。
             HttpEntity<String> entity = new HttpEntity<>(jsonBody, buildHeaders(path, jsonBody));
             ResponseEntity<Map> response = restTemplate.postForEntity(url, entity, Map.class);
             if (!response.getStatusCode().is2xxSuccessful()) {

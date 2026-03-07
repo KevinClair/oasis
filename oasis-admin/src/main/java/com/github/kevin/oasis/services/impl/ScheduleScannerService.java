@@ -7,14 +7,13 @@ import com.github.kevin.oasis.dao.JobScheduleDao;
 import com.github.kevin.oasis.models.entity.JobInfo;
 import com.github.kevin.oasis.models.entity.JobSchedule;
 import com.github.kevin.oasis.services.JobTriggerExecutorService;
-import com.github.kevin.oasis.utils.ScheduleNextTimeCalculator;
+import com.github.kevin.oasis.services.strategy.schedule.ScheduleTypeStrategyRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Locale;
 
 /**
  * 调度扫描器：扫描到期任务并触发执行
@@ -31,6 +30,8 @@ public class ScheduleScannerService {
     private final JobInfoDao jobInfoDao;
     private final JobTriggerExecutorService jobTriggerExecutorService;
     private final ExecutorNodeDao executorNodeDao;
+    private final ShardLeaseCoordinator shardLeaseCoordinator;
+    private final ScheduleTypeStrategyRegistry scheduleTypeStrategyRegistry;
 
     @Scheduled(fixedDelayString = "${oasis.scheduler.runtime.scan-interval-ms:1000}")
     public void scanAndTrigger() {
@@ -39,7 +40,18 @@ public class ScheduleScannerService {
         }
 
         long now = System.currentTimeMillis();
-        List<JobSchedule> dueSchedules = jobScheduleDao.selectDueSchedules(now, runtimeProperties.getScanLimit());
+        List<JobSchedule> dueSchedules;
+        if (runtimeProperties.isShardLeaseEnabled()) {
+            // 只扫描本节点持有租约的分片，避免所有节点全量扫描同一批任务。
+            List<Integer> ownedShardIds = shardLeaseCoordinator.getOwnedShardIds();
+            if (ownedShardIds == null || ownedShardIds.isEmpty()) {
+                return;
+            }
+            dueSchedules = jobScheduleDao.selectDueSchedulesByShards(now, runtimeProperties.getScanLimit(), ownedShardIds);
+        } else {
+            dueSchedules = jobScheduleDao.selectDueSchedules(now, runtimeProperties.getScanLimit());
+        }
+
         if (dueSchedules == null || dueSchedules.isEmpty()) {
             return;
         }
@@ -63,6 +75,7 @@ public class ScheduleScannerService {
             JobInfo jobInfo = jobInfoDao.selectById(schedule.getJobId());
             TriggerPlan plan = buildTriggerPlan(jobInfo, now);
 
+            // CAS 抢占：只有版本号和原触发时间都匹配的节点才能推进 next_trigger_time。
             int claimed = jobScheduleDao.claimAndUpdateNextTrigger(
                     schedule.getJobId(),
                     schedule.getVersion(),
@@ -75,6 +88,7 @@ public class ScheduleScannerService {
                 return;
             }
 
+            // 抢占成功后再触发，避免多节点重复执行。
             jobTriggerExecutorService.trigger(jobInfo, "SCHEDULE", null, 1);
         } catch (Exception e) {
             log.error("process schedule failed, jobId={}", schedule.getJobId(), e);
@@ -86,12 +100,11 @@ public class ScheduleScannerService {
             return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, false);
         }
 
-        String scheduleType = normalizeType(jobInfo.getScheduleType());
-        if ("ONCE".equals(scheduleType)) {
+        if (scheduleTypeStrategyRegistry.isOneShot(jobInfo.getScheduleType())) {
             return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, true);
         }
 
-        Long nextTriggerTime = ScheduleNextTimeCalculator.computeNextTriggerTime(
+        Long nextTriggerTime = scheduleTypeStrategyRegistry.nextTriggerTime(
                 jobInfo.getScheduleType(),
                 jobInfo.getScheduleConf(),
                 now
@@ -103,13 +116,6 @@ public class ScheduleScannerService {
         }
 
         return new TriggerPlan(nextTriggerTime, true, true);
-    }
-
-    private String normalizeType(String scheduleType) {
-        if (scheduleType == null) {
-            return "";
-        }
-        return scheduleType.trim().toUpperCase(Locale.ROOT);
     }
 
     private record TriggerPlan(Long nextTriggerTime, Boolean triggerStatus, boolean fireNow) {

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.ShardLeaseDao">
+
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.ShardLease">
+        <id column="id" property="id"/>
+        <result column="shard_id" property="shardId"/>
+        <result column="owner_node_id" property="ownerNodeId"/>
+        <result column="lease_expire_at" property="leaseExpireAt"/>
+        <result column="version" property="version"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <select id="selectByShardId" resultMap="BaseResultMap">
+        SELECT id, shard_id, owner_node_id, lease_expire_at, version, update_time
+        FROM shard_lease
+        WHERE shard_id = #{shardId}
+    </select>
+
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.ShardLease" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO shard_lease (
+            shard_id, owner_node_id, lease_expire_at, version, update_time
+        ) VALUES (
+            #{shardId}, #{ownerNodeId}, #{leaseExpireAt}, #{version}, NOW()
+        )
+    </insert>
+
+    <update id="renewIfOwner">
+        UPDATE shard_lease
+        SET lease_expire_at = #{leaseExpireAt},
+            version = version + 1,
+            update_time = NOW()
+        WHERE shard_id = #{shardId}
+          AND owner_node_id = #{ownerNodeId}
+          AND version = #{expectedVersion}
+    </update>
+
+    <update id="takeOverExpired">
+        UPDATE shard_lease
+        SET owner_node_id = #{ownerNodeId},
+            lease_expire_at = #{leaseExpireAt},
+            version = version + 1,
+            update_time = NOW()
+        WHERE shard_id = #{shardId}
+          AND lease_expire_at <![CDATA[ < ]]> #{nowTime}
+          AND version = #{expectedVersion}
+    </update>
+
+    <select id="selectOwnedShardIds" resultType="int">
+        SELECT shard_id
+        FROM shard_lease
+        WHERE owner_node_id = #{ownerNodeId}
+          AND lease_expire_at <![CDATA[ >= ]]> #{nowTime}
+        ORDER BY shard_id ASC
+    </select>
+
+</mapper>

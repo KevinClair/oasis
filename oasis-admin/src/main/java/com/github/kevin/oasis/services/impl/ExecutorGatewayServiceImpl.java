@@ -84,7 +84,9 @@ public class ExecutorGatewayServiceImpl implements ExecutorGatewayService {
     }
 
     @Override
-    public boolean callbackResult(ExecutorCallbackResultRequest request) {
+    public boolean callbackResult(String appCode, ExecutorCallbackResultRequest request) {
+        verifyFireLogOwnership(appCode, request.getFireLogId());
+
         JobFireLog log = JobFireLog.builder()
                 .id(request.getFireLogId())
                 .status(request.getStatus())
@@ -97,7 +99,9 @@ public class ExecutorGatewayServiceImpl implements ExecutorGatewayService {
     }
 
     @Override
-    public boolean callbackLog(ExecutorCallbackLogRequest request) {
+    public boolean callbackLog(String appCode, ExecutorCallbackLogRequest request) {
+        verifyFireLogOwnership(appCode, request.getFireLogId());
+
         JobLogChunk chunk = JobLogChunk.builder()
                 .fireLogId(request.getFireLogId())
                 .seqNo(request.getSeqNo())
@@ -115,6 +119,20 @@ public class ExecutorGatewayServiceImpl implements ExecutorGatewayService {
 
         if (app.getAppKey() == null || !app.getAppKey().equals(appKey)) {
             throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "应用密钥不匹配");
+        }
+    }
+
+    private void verifyFireLogOwnership(String appCode, Long fireLogId) {
+        // 鉴权关闭场景下 appCode 为空，跳过归属校验（仅用于本地调试/兼容）。
+        if (appCode == null || appCode.isBlank()) {
+            return;
+        }
+        String fireLogAppCode = jobFireLogDao.selectAppCodeByFireLogId(fireLogId);
+        if (fireLogAppCode == null) {
+            throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "执行日志不存在");
+        }
+        if (!fireLogAppCode.equals(appCode)) {
+            throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "无权限回调该执行日志");
         }
     }
 }

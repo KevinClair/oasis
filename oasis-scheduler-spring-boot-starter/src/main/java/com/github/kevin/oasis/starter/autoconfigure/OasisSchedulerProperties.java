@@ -52,6 +52,11 @@ public class OasisSchedulerProperties {
         private int port = 19091;
 
         private String contextPath = "/oasis-executor";
+
+        /**
+         * 是否校验 admin 下发请求签名
+         */
+        private boolean verifyInvokeSignature = true;
     }
 
     @Data
@@ -90,5 +95,11 @@ public class OasisSchedulerProperties {
 
         @Min(0)
         private long clockSkewMs = 30000;
+
+        @Min(1)
+        private long nonceExpireMs = 120000;
+
+        @Min(100)
+        private int nonceMaxSize = 20000;
     }
 }

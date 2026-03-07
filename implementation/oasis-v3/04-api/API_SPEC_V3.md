@@ -27,7 +27,7 @@
 ## Executor 协议（一期）
 
 ### Admin -> Executor
-- `POST /oasis-executor/invoke`
+- `POST /{contextPath}/invoke`（由 starter 内置 Netty HTTP Server 提供，默认 `contextPath=/oasis-executor`）
 
 ### Executor -> Admin
 - `POST /executor/registry/register`
@@ -37,3 +37,18 @@
 
 ## 鉴权
 - 一期采用 `AppKey + HMAC`。
+- Admin -> Executor 也使用同一组签名头：
+  - `X-Oasis-App-Code`
+  - `X-Oasis-Timestamp`
+  - `X-Oasis-Nonce`
+  - `X-Oasis-Signature`
+- 执行器请求头要求：
+  - `X-Oasis-App-Code`
+  - `X-Oasis-Timestamp`
+  - `X-Oasis-Nonce`
+  - `X-Oasis-Signature`
+- Admin 校验逻辑：
+  - 时间戳偏移窗口校验
+  - nonce 防重放
+  - HMAC 签名校验
+  - 回调 `fireLog` 归属校验（防跨应用回调）

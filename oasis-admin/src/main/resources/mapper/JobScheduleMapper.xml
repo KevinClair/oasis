@@ -58,6 +58,19 @@
         LIMIT #{limit}
     </select>
 
+    <select id="selectDueSchedulesByShards" resultMap="BaseResultMap">
+        SELECT id, job_id, shard_id, next_trigger_time, misfire_strategy, trigger_status, version, create_time, update_time
+        FROM job_schedule
+        WHERE trigger_status = 1
+          AND next_trigger_time <![CDATA[ <= ]]> #{nowTime}
+          AND shard_id IN
+          <foreach collection="shardIds" item="shardId" open="(" separator="," close=")">
+              #{shardId}
+          </foreach>
+        ORDER BY next_trigger_time ASC
+        LIMIT #{limit}
+    </select>
+
     <update id="claimAndUpdateNextTrigger">
         UPDATE job_schedule
         SET next_trigger_time = #{nextTriggerTime},

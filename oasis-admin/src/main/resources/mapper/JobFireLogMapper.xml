@@ -97,6 +97,24 @@
         WHERE l.id = #{id}
     </select>
 
+    <select id="selectById" resultType="com.github.kevin.oasis.models.entity.JobFireLog">
+        SELECT
+            id,
+            job_id AS jobId,
+            trigger_time AS triggerTime,
+            finish_time AS finishTime,
+            trigger_type AS triggerType,
+            executor_address AS executorAddress,
+            status,
+            attempt_no AS attemptNo,
+            error_message AS errorMessage,
+            trace_id AS traceId,
+            create_time AS createTime,
+            update_time AS updateTime
+        FROM job_fire_log
+        WHERE id = #{id}
+    </select>
+
     <update id="updateResult">
         UPDATE job_fire_log
         SET status = #{log.status},
@@ -118,5 +136,13 @@
             update_time = NOW()
         WHERE id = #{log.id}
     </update>
+
+    <select id="selectAppCodeByFireLogId" resultType="string">
+        SELECT j.app_code
+        FROM job_fire_log l
+                 INNER JOIN job_info j ON l.job_id = j.id
+        WHERE l.id = #{fireLogId}
+        LIMIT 1
+    </select>
 
 </mapper>

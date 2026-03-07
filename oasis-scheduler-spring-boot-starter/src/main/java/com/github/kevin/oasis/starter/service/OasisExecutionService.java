@@ -47,6 +47,7 @@ public class OasisExecutionService {
 
     public boolean submit(ExecutorInvokeRequest request) {
         try {
+            // 仅负责入队，避免 admin 调用线程被执行逻辑阻塞。
             worker().submit(() -> execute(request));
             return true;
         } catch (Exception e) {
@@ -77,6 +78,7 @@ public class OasisExecutionService {
             log.error("execute handler failed, fireLogId={}, handler={}", request.getFireLogId(), request.getHandlerName(), e);
         } finally {
             int seq = 1;
+            // 先上报执行日志分片，再上报最终状态，便于 admin 侧回溯失败上下文。
             for (OasisJobContext.LogLine line : context.getLogs()) {
                 oasisAdminClient.callbackLog(ExecutorCallbackLogRequest.builder()
                         .fireLogId(request.getFireLogId())

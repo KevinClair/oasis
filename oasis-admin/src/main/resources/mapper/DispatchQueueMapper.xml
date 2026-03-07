@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.github.kevin.oasis.dao.DispatchQueueDao">
+
+    <resultMap id="BaseResultMap" type="com.github.kevin.oasis.models.entity.DispatchQueue">
+        <id column="id" property="id"/>
+        <result column="fire_log_id" property="fireLogId"/>
+        <result column="job_id" property="jobId"/>
+        <result column="target_address" property="targetAddress"/>
+        <result column="payload" property="payload"/>
+        <result column="status" property="status"/>
+        <result column="retry_count" property="retryCount"/>
+        <result column="next_retry_time" property="nextRetryTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.DispatchQueue" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO dispatch_queue (
+            fire_log_id, job_id, target_address, payload, status, retry_count, next_retry_time, create_time, update_time
+        ) VALUES (
+            #{fireLogId}, #{jobId}, #{targetAddress}, #{payload}, #{status}, #{retryCount}, #{nextRetryTime}, NOW(), NOW()
+        )
+    </insert>
+
+    <select id="selectDueRecords" resultMap="BaseResultMap">
+        SELECT id, fire_log_id, job_id, target_address, payload, status, retry_count, next_retry_time, create_time, update_time
+        FROM dispatch_queue
+        WHERE status = 'PENDING'
+          AND next_retry_time <![CDATA[ <= ]]> #{nowTime}
+        ORDER BY next_retry_time ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
+    <update id="recoverStuckProcessing">
+        UPDATE dispatch_queue
+        SET status = 'PENDING',
+            next_retry_time = #{nextRetryTime},
+            update_time = NOW()
+        WHERE status = 'PROCESSING'
+          AND UNIX_TIMESTAMP(update_time) * 1000 <![CDATA[ < ]]> #{stuckBefore}
+    </update>
+
+    <update id="claimProcessing">
+        UPDATE dispatch_queue
+        SET status = 'PROCESSING',
+            update_time = NOW()
+        WHERE id = #{id}
+          AND status = 'PENDING'
+    </update>
+
+    <update id="markSuccess">
+        UPDATE dispatch_queue
+        SET status = 'SUCCESS',
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="reschedule">
+        UPDATE dispatch_queue
+        SET status = 'PENDING',
+            retry_count = #{retryCount},
+            next_retry_time = #{nextRetryTime},
+            payload = #{payload},
+            update_time = NOW()
+        WHERE id = #{id}
+          AND status = 'PROCESSING'
+    </update>
+
+    <update id="markDead">
+        UPDATE dispatch_queue
+        SET status = 'DEAD',
+            payload = #{payload},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>

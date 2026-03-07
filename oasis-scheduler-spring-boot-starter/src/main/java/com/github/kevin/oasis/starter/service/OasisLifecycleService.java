@@ -4,6 +4,7 @@ import com.github.kevin.oasis.starter.autoconfigure.OasisSchedulerProperties;
 import com.github.kevin.oasis.starter.client.OasisAdminClient;
 import com.github.kevin.oasis.starter.model.ExecutorHeartbeatRequest;
 import com.github.kevin.oasis.starter.model.ExecutorRegisterRequest;
+import com.github.kevin.oasis.starter.server.ExecutorNettyHttpServer;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,12 +26,20 @@ public class OasisLifecycleService {
     private final OasisSchedulerProperties properties;
     private final OasisAdminClient oasisAdminClient;
     private final JobHandlerRegistry jobHandlerRegistry;
+    private final ExecutorNettyHttpServer executorNettyHttpServer;
 
     private volatile boolean registered = false;
 
     @EventListener(ApplicationReadyEvent.class)
     public void onReady() {
         jobHandlerRegistry.init();
+
+        // 先启动接收端，再向 admin 注册，确保注册后即可被下发调度请求。
+        boolean serverStarted = executorNettyHttpServer.start();
+        if (!serverStarted) {
+            log.error("oasis netty server not started, skip register");
+            return;
+        }
         registered = doRegister();
     }
 
@@ -60,6 +69,7 @@ public class OasisLifecycleService {
     public void onShutdown() {
         log.info("oasis starter shutdown, stop heartbeat");
         registered = false;
+        executorNettyHttpServer.stop();
     }
 
     private boolean doRegister() {
