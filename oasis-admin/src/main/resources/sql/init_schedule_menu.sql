@@ -56,7 +56,36 @@ WHERE @schedule_menu_id IS NOT NULL
       SELECT 1 FROM `menu` WHERE `route_name` = 'schedule_log'
   );
 
--- 5. 创建隐藏子菜单：任务告警事件详情
+-- 5. 创建子菜单：补偿队列
+INSERT INTO `menu` (`parent_id`, `menu_type`, `menu_name`, `route_name`, `route_path`, `component`,
+                    `icon_type`, `icon`, `i18n_key`, `order`, `keep_alive`, `constant`,
+                    `hide_in_menu`, `multi_tab`, `status`, `create_by`, `create_time`, `update_by`, `update_time`)
+SELECT @schedule_menu_id,
+       2,
+       '补偿队列',
+       'schedule_dispatch',
+       '/schedule/dispatch',
+       'view.schedule_dispatch',
+       '1',
+       'mdi:database-sync-outline',
+       'route.schedule_dispatch',
+       3,
+       0,
+       0,
+       0,
+       0,
+       1,
+       'system',
+       NOW(),
+       'system',
+       NOW()
+FROM DUAL
+WHERE @schedule_menu_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1
+                  FROM `menu`
+                  WHERE `route_name` = 'schedule_dispatch');
+
+-- 6. 创建隐藏子菜单：任务告警事件详情
 INSERT INTO `menu` (
     `parent_id`, `menu_type`, `menu_name`, `route_name`, `route_path`, `component`,
     `icon_type`, `icon`, `i18n_key`, `order`, `keep_alive`, `constant`,
@@ -64,7 +93,12 @@ INSERT INTO `menu` (
 )
 SELECT
     @schedule_menu_id, 2, '告警事件', 'schedule_job-alarm-events', '/schedule/job/alarm-events/:jobId', 'view.schedule_job-alarm-events',
-    '1', 'mdi:alarm-light-outline', 'route.schedule_job-alarm-events', 3, 0, 0,
+    '1',
+    'mdi:alarm-light-outline',
+    'route.schedule_job-alarm-events',
+    4,
+    0,
+    0,
     1, 0, 1, 'system', NOW(), 'system', NOW()
 FROM DUAL
 WHERE @schedule_menu_id IS NOT NULL

@@ -43,3 +43,19 @@
 - detailDrawer.logId -> `job_fire_log.id`
 - detailDrawer.errorMessage -> `job_fire_log.error_message`
 - detailDrawer.attemptNo -> `job_fire_log.attempt_no`
+
+## 补偿队列页
+
+- pendingCount -> `COUNT(dispatch_queue.status='PENDING')`
+- processingCount -> `COUNT(dispatch_queue.status='PROCESSING')`
+- successCount -> `COUNT(dispatch_queue.status='SUCCESS')`
+- deadCount -> `COUNT(dispatch_queue.status='DEAD')`
+- duePendingCount -> `COUNT(dispatch_queue.status='PENDING' AND dispatch_queue.next_retry_time <= now)`
+- fireLogId -> `dispatch_queue.fire_log_id`
+- jobId -> `dispatch_queue.job_id`
+- status -> `dispatch_queue.status`
+- retryCount -> `dispatch_queue.retry_count`
+- nextRetryTime -> `dispatch_queue.next_retry_time`
+- payload -> `dispatch_queue.payload`
+- targetAddress -> `dispatch_queue.target_address`
+- updateTime -> `dispatch_queue.update_time`

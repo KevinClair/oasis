@@ -401,6 +401,37 @@ declare namespace Api {
 
     type ScheduleLogList = Common.PaginatingQueryRecord<ScheduleLog>;
 
+    type DispatchQueueOverview = {
+      pendingCount: number;
+      processingCount: number;
+      successCount: number;
+      deadCount: number;
+      duePendingCount: number;
+    };
+
+    type DispatchQueue = {
+      id: number;
+      fireLogId: number;
+      jobId: number;
+      targetAddress?: string | null;
+      status: string;
+      retryCount: number;
+      nextRetryTime?: number | null;
+      payload?: string | null;
+      createTime?: string | null;
+      updateTime?: string | null;
+    };
+
+    type DispatchQueueSearchParams = CommonType.RecordNullable<
+      {
+        status: string;
+        fireLogId: number;
+        jobId: number;
+      } & CommonSearchParams
+    >;
+
+    type DispatchQueueList = Common.PaginatingQueryRecord<DispatchQueue>;
+
     type AppAlarmTemplate = {
       id?: number;
       appCode: string;

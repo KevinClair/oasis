@@ -27,7 +27,7 @@
         WHERE app_code = #{appCode}
           AND status = 'ONLINE'
           AND last_heartbeat_time <![CDATA[ >= ]]> #{heartbeatAfter}
-        ORDER BY update_time DESC, id ASC
+        ORDER BY id ASC
     </select>
 
     <insert id="insert" parameterType="com.github.kevin.oasis.models.entity.ExecutorNode" useGeneratedKeys="true" keyProperty="id">

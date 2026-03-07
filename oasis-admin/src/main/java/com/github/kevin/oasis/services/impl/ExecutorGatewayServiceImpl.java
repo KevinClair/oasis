@@ -28,6 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class ExecutorGatewayServiceImpl implements ExecutorGatewayService {
 
+    private static final String STATUS_SUCCESS = "SUCCESS";
+    private static final String STATUS_FAILED = "FAILED";
+    private static final String STATUS_TIMEOUT = "TIMEOUT";
+
     private final ApplicationDao applicationDao;
     private final ExecutorNodeDao executorNodeDao;
     private final JobFireLogDao jobFireLogDao;
@@ -87,10 +91,28 @@ public class ExecutorGatewayServiceImpl implements ExecutorGatewayService {
     public boolean callbackResult(String appCode, ExecutorCallbackResultRequest request) {
         verifyFireLogOwnership(appCode, request.getFireLogId());
 
+        JobFireLog current = jobFireLogDao.selectById(request.getFireLogId());
+        if (current == null) {
+            throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "执行日志不存在");
+        }
+
+        int incomingAttempt = request.getAttemptNo() == null ? 1 : request.getAttemptNo();
+        int currentAttempt = current.getAttemptNo() == null ? 1 : current.getAttemptNo();
+        if (incomingAttempt < currentAttempt) {
+            // 旧 attempt 的迟到回调直接忽略，避免覆盖新 attempt 的最终状态。
+            log.info("ignore stale callback result, fireLogId={}, incomingAttempt={}, currentAttempt={}",
+                    request.getFireLogId(), incomingAttempt, currentAttempt);
+            return true;
+        }
+        if (incomingAttempt == currentAttempt && isTerminalStatus(current.getStatus())) {
+            // 同 attempt 的重复回调按幂等处理。
+            return true;
+        }
+
         JobFireLog log = JobFireLog.builder()
                 .id(request.getFireLogId())
                 .status(request.getStatus())
-                .attemptNo(request.getAttemptNo() == null ? 1 : request.getAttemptNo())
+                .attemptNo(incomingAttempt)
                 .finishTime(request.getFinishTime() == null ? System.currentTimeMillis() : request.getFinishTime())
                 .executorAddress(request.getExecutorAddress())
                 .errorMessage(request.getErrorMessage())
@@ -134,5 +156,9 @@ public class ExecutorGatewayServiceImpl implements ExecutorGatewayService {
         if (!fireLogAppCode.equals(appCode)) {
             throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "无权限回调该执行日志");
         }
+    }
+
+    private boolean isTerminalStatus(String status) {
+        return STATUS_SUCCESS.equals(status) || STATUS_FAILED.equals(status) || STATUS_TIMEOUT.equals(status);
     }
 }

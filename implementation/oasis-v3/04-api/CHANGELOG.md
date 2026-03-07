@@ -17,6 +17,16 @@
 - 模式分支重构为 Spring 策略模式：
   - 调度类型策略：`CRON / FIXED_DELAY / ONCE`
   - 路由策略：`ROUND / RANDOM / FAILOVER / BROADCAST`
+- 新增调度补偿队列可观测性接口：
+    - `GET /schedule/dispatch/overview`
+    - `POST /schedule/dispatch/list`
+- 新增 `shard_lease` drain 能力：
+    - 节点关闭时主动释放租约并下线 `scheduler_node`
+- 新增调度补偿队列前端接入能力：
+    - 新增页面路由 `/schedule/dispatch`（菜单 `schedule_dispatch`）
+    - 新增前端调用 `GET /schedule/dispatch/overview`、`POST /schedule/dispatch/list`
+- 回调结果处理增强：
+    - `callback/result` 增加 attempt 乱序幂等保护，旧 attempt 回调不再覆盖新 attempt 状态
 
 ## 2026-03-06
 - 新增调度执行闭环实现（Admin 内核侧）：

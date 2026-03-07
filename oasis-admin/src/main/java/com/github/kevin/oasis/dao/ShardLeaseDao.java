@@ -25,4 +25,6 @@ public interface ShardLeaseDao {
                         @Param("expectedVersion") Long expectedVersion);
 
     List<Integer> selectOwnedShardIds(@Param("ownerNodeId") String ownerNodeId, @Param("nowTime") Long nowTime);
+
+    int releaseByOwner(@Param("ownerNodeId") String ownerNodeId, @Param("releaseTime") Long releaseTime);
 }

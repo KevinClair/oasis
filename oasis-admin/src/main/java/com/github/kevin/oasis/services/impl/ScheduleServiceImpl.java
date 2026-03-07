@@ -36,6 +36,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final JobAlarmPolicyDao jobAlarmPolicyDao;
     private final JobAlarmEventDao jobAlarmEventDao;
     private final JobAlarmNotifyRecordDao jobAlarmNotifyRecordDao;
+    private final DispatchQueueDao dispatchQueueDao;
     private final ApplicationDao applicationDao;
     private final JobTriggerExecutorService jobTriggerExecutorService;
     private final ScheduleTypeStrategyRegistry scheduleTypeStrategyRegistry;
@@ -304,6 +305,44 @@ public class ScheduleServiceImpl implements ScheduleService {
                 .build();
     }
 
+    @Override
+    public DispatchQueueOverviewVO getDispatchQueueOverview() {
+        long now = System.currentTimeMillis();
+        return DispatchQueueOverviewVO.builder()
+                .pendingCount(defaultLong(dispatchQueueDao.countByStatus("PENDING")))
+                .processingCount(defaultLong(dispatchQueueDao.countByStatus("PROCESSING")))
+                .successCount(defaultLong(dispatchQueueDao.countByStatus("SUCCESS")))
+                .deadCount(defaultLong(dispatchQueueDao.countByStatus("DEAD")))
+                .duePendingCount(defaultLong(dispatchQueueDao.countDuePending(now)))
+                .build();
+    }
+
+    @Override
+    public DispatchQueueListResponse getDispatchQueueList(DispatchQueueListRequest request) {
+        normalizeDispatchQueueRequest(request);
+        List<DispatchQueue> records = dispatchQueueDao.selectList(request);
+        Long total = dispatchQueueDao.countList(request);
+        List<DispatchQueueVO> voRecords = records.stream().map(item -> DispatchQueueVO.builder()
+                .id(item.getId())
+                .fireLogId(item.getFireLogId())
+                .jobId(item.getJobId())
+                .targetAddress(item.getTargetAddress())
+                .status(item.getStatus())
+                .retryCount(item.getRetryCount())
+                .nextRetryTime(item.getNextRetryTime())
+                .payload(item.getPayload())
+                .createTime(item.getCreateTime())
+                .updateTime(item.getUpdateTime())
+                .build()).collect(Collectors.toList());
+
+        return DispatchQueueListResponse.builder()
+                .records(voRecords)
+                .current(request.getCurrent())
+                .size(request.getSize())
+                .total(total == null ? 0L : total)
+                .build();
+    }
+
     private JobVO toJobVO(JobInfo info) {
         JobSchedule schedule = jobScheduleDao.selectByJobId(info.getId());
         return JobVO.builder()
@@ -383,6 +422,10 @@ public class ScheduleServiceImpl implements ScheduleService {
         return value == null ? defaultValue : value;
     }
 
+    private Long defaultLong(Long value) {
+        return value == null ? 0L : value;
+    }
+
     private Long computeInitialNextTriggerTime(String scheduleType, String scheduleConf) {
         Long now = System.currentTimeMillis();
         Long next = scheduleTypeStrategyRegistry.nextTriggerTime(scheduleType, scheduleConf, now);
@@ -392,5 +435,17 @@ public class ScheduleServiceImpl implements ScheduleService {
     private Integer computeShardId(Long jobId) {
         int shardCount = Math.max(1, runtimeProperties.getShardCount());
         return (int) (jobId % shardCount);
+    }
+
+    private void normalizeDispatchQueueRequest(DispatchQueueListRequest request) {
+        if (request.getCurrent() == null || request.getCurrent() < 1) {
+            request.setCurrent(1);
+        }
+        if (request.getSize() == null || request.getSize() < 1) {
+            request.setSize(10);
+        }
+        if (request.getSize() > 200) {
+            request.setSize(200);
+        }
     }
 }

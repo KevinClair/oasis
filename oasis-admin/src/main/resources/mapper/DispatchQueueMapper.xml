@@ -75,4 +75,54 @@
         WHERE id = #{id}
     </update>
 
+    <select id="countByStatus" resultType="long">
+        SELECT COUNT(*)
+        FROM dispatch_queue
+        WHERE status = #{status}
+    </select>
+
+    <select id="countDuePending" resultType="long">
+        SELECT COUNT(*)
+        FROM dispatch_queue
+        WHERE status = 'PENDING'
+          AND next_retry_time <![CDATA[ <= ]]> #{nowTime}
+    </select>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        SELECT id, fire_log_id, job_id, target_address, payload, status, retry_count, next_retry_time, create_time,
+        update_time
+        FROM dispatch_queue
+        <where>
+            <if test="request.status != null and request.status != ''">
+                AND status = #{request.status}
+            </if>
+            <if test="request.fireLogId != null">
+                AND fire_log_id = #{request.fireLogId}
+            </if>
+            <if test="request.jobId != null">
+                AND job_id = #{request.jobId}
+            </if>
+        </where>
+        ORDER BY update_time DESC, id DESC
+        <if test="request.current != null and request.size != null">
+            LIMIT #{request.size} OFFSET ${(request.current - 1) * request.size}
+        </if>
+    </select>
+
+    <select id="countList" resultType="long">
+        SELECT COUNT(*)
+        FROM dispatch_queue
+        <where>
+            <if test="request.status != null and request.status != ''">
+                AND status = #{request.status}
+            </if>
+            <if test="request.fireLogId != null">
+                AND fire_log_id = #{request.fireLogId}
+            </if>
+            <if test="request.jobId != null">
+                AND job_id = #{request.jobId}
+            </if>
+        </where>
+    </select>
+
 </mapper>

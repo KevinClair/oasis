@@ -12,9 +12,10 @@
 
 ## 当前实现状态（2026-03-07）
 - 已实现 `scheduler_node` 心跳上报与超时下线。
+- 已支持稳定节点标识（默认 `host:port`，可配置 `scheduler-node-id`）。
 - 已实现 `ShardLeaseCoordinator` 周期续租/过期抢占。
 - 已实现“仅扫描本节点持有分片”的调度扫描逻辑。
-- 优雅下线主动释放 lease（drain）仍待补充。
+- 已实现优雅下线主动释放 lease（drain）。
 
 ## 风险点
 - 时钟偏差

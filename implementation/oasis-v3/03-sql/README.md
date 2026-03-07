@@ -2,7 +2,9 @@
 
 ## 执行顺序
 1. `V3_20260304_001_core_tables.sql`
-2. 后续迁移脚本按文件名序号递增执行
+2. `V3_20260307_002_scheduler_dispatch_runtime.sql`
+3. `V3_20260307_003_schedule_dispatch_menu.sql`
+4. 后续迁移脚本按文件名序号递增执行
 
 ## 风险说明
 - 该批 SQL 会创建核心业务表与索引。
@@ -10,8 +12,11 @@
 - 大表索引创建需评估执行时间。
 
 ## 回滚顺序
-1. `V3_20260304_001_core_tables_rollback.sql`
-2. 后续脚本按相反顺序回滚
+
+1. `V3_20260307_003_schedule_dispatch_menu_rollback.sql`
+2. `V3_20260307_002_scheduler_dispatch_runtime_rollback.sql`
+3. `V3_20260304_001_core_tables_rollback.sql`
+4. 后续脚本按相反顺序回滚
 
 ## 约束
 - 所有 SQL 仅存放在本目录。

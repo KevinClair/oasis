@@ -62,6 +62,12 @@ public class SchedulerRuntimeProperties {
     private int schedulerNodePort = 8080;
 
     /**
+     * 可选固定节点ID。
+     * 未配置时默认使用 host:port，避免每次重启生成新节点记录。
+     */
+    private String schedulerNodeId;
+
+    /**
      * 执行器心跳超时阈值（毫秒）
      */
     private long executorHeartbeatTimeoutMs = 10_000L;

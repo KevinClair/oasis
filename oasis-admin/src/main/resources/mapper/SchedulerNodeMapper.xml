@@ -53,4 +53,11 @@
           AND last_heartbeat_time <![CDATA[ < ]]> #{heartbeatBefore}
     </update>
 
+    <update id="markOfflineByNodeId">
+        UPDATE scheduler_node
+        SET status      = 'OFFLINE',
+            update_time = NOW()
+        WHERE node_id = #{nodeId}
+    </update>
+
 </mapper>

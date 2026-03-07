@@ -12,6 +12,11 @@
 - `POST /schedule/log/list`
 - `GET /schedule/log/{id}`
 
+### 调度补偿队列（一期）
+
+- `GET /schedule/dispatch/overview`
+- `POST /schedule/dispatch/list`
+
 ### 应用默认告警模板
 - `GET /schedule/app/{appCode}/alarm-template`
 - `POST /schedule/app/alarm-template/save`
@@ -52,3 +57,4 @@
   - nonce 防重放
   - HMAC 签名校验
   - 回调 `fireLog` 归属校验（防跨应用回调）
+  - `callback/result` 旧 attempt 回调幂等忽略（防乱序覆盖）

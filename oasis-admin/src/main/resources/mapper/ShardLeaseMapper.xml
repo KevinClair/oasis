@@ -54,4 +54,12 @@
         ORDER BY shard_id ASC
     </select>
 
+    <update id="releaseByOwner">
+        UPDATE shard_lease
+        SET lease_expire_at = #{releaseTime},
+            version         = version + 1,
+            update_time     = NOW()
+        WHERE owner_node_id = #{ownerNodeId}
+    </update>
+
 </mapper>

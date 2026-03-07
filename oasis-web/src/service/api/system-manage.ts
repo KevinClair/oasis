@@ -1,4 +1,4 @@
-import { request } from '../request';
+import {request} from '../request';
 
 /** get role list */
 export function fetchGetRoleList(params?: Api.SystemManage.RoleSearchParams) {
@@ -334,6 +334,23 @@ export function fetchGetScheduleLogDetail(id: number) {
   return request<Api.SystemManage.ScheduleLog>({
     url: `/schedule/log/${id}`,
     method: 'get'
+  });
+}
+
+/** get dispatch queue overview */
+export function fetchGetDispatchQueueOverview() {
+  return request<Api.SystemManage.DispatchQueueOverview>({
+    url: '/schedule/dispatch/overview',
+    method: 'get'
+  });
+}
+
+/** get dispatch queue list */
+export function fetchGetDispatchQueueList(params?: Api.SystemManage.DispatchQueueSearchParams) {
+  return request<Api.SystemManage.DispatchQueueList>({
+    url: '/schedule/dispatch/list',
+    method: 'post',
+    data: params
   });
 }
 

@@ -1,6 +1,7 @@
 package com.github.kevin.oasis.dao;
 
 import com.github.kevin.oasis.models.entity.DispatchQueue;
+import com.github.kevin.oasis.models.vo.schedule.DispatchQueueListRequest;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -25,4 +26,12 @@ public interface DispatchQueueDao {
                    @Param("payload") String payload);
 
     int markDead(@Param("id") Long id, @Param("payload") String payload);
+
+    Long countByStatus(@Param("status") String status);
+
+    Long countDuePending(@Param("nowTime") Long nowTime);
+
+    List<DispatchQueue> selectList(@Param("request") DispatchQueueListRequest request);
+
+    Long countList(@Param("request") DispatchQueueListRequest request);
 }

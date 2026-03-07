@@ -18,4 +18,6 @@ public interface SchedulerNodeDao {
     List<SchedulerNode> selectAliveNodes(@Param("heartbeatAfter") Long heartbeatAfter);
 
     int markOfflineByHeartbeatBefore(@Param("heartbeatBefore") Long heartbeatBefore);
+
+    int markOfflineByNodeId(@Param("nodeId") String nodeId);
 }

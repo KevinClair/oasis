@@ -6,6 +6,7 @@ import com.github.kevin.oasis.dao.ShardLeaseDao;
 import com.github.kevin.oasis.models.entity.SchedulerNode;
 import com.github.kevin.oasis.models.entity.ShardLease;
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Component;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -41,7 +41,12 @@ public class ShardLeaseCoordinator {
     @PostConstruct
     public void init() {
         localHost = resolveHost();
-        localNodeId = localHost + ":" + runtimeProperties.getSchedulerNodePort() + ":" + shortUuid();
+        if (runtimeProperties.getSchedulerNodeId() != null && !runtimeProperties.getSchedulerNodeId().isBlank()) {
+            localNodeId = runtimeProperties.getSchedulerNodeId().trim();
+            return;
+        }
+        // 默认使用 host:port 作为稳定节点标识，避免节点每次重启都写入新 nodeId。
+        localNodeId = localHost + ":" + runtimeProperties.getSchedulerNodePort();
     }
 
     @Scheduled(fixedDelayString = "${oasis.scheduler.runtime.scheduler-node-heartbeat-interval-ms:1000}")
@@ -150,7 +155,18 @@ public class ShardLeaseCoordinator {
         }
     }
 
-    private String shortUuid() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+    @PreDestroy
+    public void onShutdown() {
+        if (localNodeId == null || localNodeId.isBlank()) {
+            return;
+        }
+        try {
+            // drain：主动释放租约并下线节点，减少等待租约超时带来的接管延迟。
+            shardLeaseDao.releaseByOwner(localNodeId, System.currentTimeMillis() - 1);
+            schedulerNodeDao.markOfflineByNodeId(localNodeId);
+            log.info("scheduler node drain complete, nodeId={}", localNodeId);
+        } catch (Exception e) {
+            log.warn("scheduler node drain failed, nodeId={}, msg={}", localNodeId, e.getMessage());
+        }
     }
 }

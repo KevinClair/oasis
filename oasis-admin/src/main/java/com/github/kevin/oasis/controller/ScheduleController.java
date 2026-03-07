@@ -99,4 +99,16 @@ public class ScheduleController {
     public Response<JobAlarmEventDetailVO> getAlarmEvent(@PathVariable Long eventId) {
         return Response.success(scheduleService.getAlarmEventDetail(eventId));
     }
+
+    @GetMapping("/dispatch/overview")
+    @Permission
+    public Response<DispatchQueueOverviewVO> getDispatchOverview() {
+        return Response.success(scheduleService.getDispatchQueueOverview());
+    }
+
+    @PostMapping("/dispatch/list")
+    @Permission
+    public Response<DispatchQueueListResponse> getDispatchList(@RequestBody DispatchQueueListRequest request) {
+        return Response.success(scheduleService.getDispatchQueueList(request));
+    }
 }

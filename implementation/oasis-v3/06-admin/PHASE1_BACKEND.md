@@ -9,6 +9,7 @@
 - 执行器 HMAC 鉴权（签名、时间窗、nonce 防重放）
 - Admin -> Executor 下发签名（`/invoke` 请求头携带 `X-Oasis-*`）
 - `dispatch_queue` 异步重试与失败补偿
+- 回调结果幂等保护（旧 attempt 回调忽略）
 - 应用默认告警模板 API
 - 任务告警策略与事件 API
 
@@ -21,6 +22,11 @@
 6. 下发成功更新 `job_fire_log(RUNNING)`，失败进入 `dispatch_queue` 异步重试。
 7. 重试超过阈值后标记 `dispatch_queue(DEAD)` 并最终补偿为 `job_fire_log(FAILED)`。
 8. 执行器回调 `callback/result` 与 `callback/log` 更新最终状态和分片日志。
+
+## 稳定性增强
+
+- `scheduler_node` 支持固定节点ID（未配置时默认 `host:port`），避免节点重启产生新 nodeId。
+- 执行器路由基础顺序固定为 `id ASC`，降低心跳更新时间导致的轮询抖动。
 
 ## 已知一期限制
 - `BROADCAST` 在一期单 `fireLog` 模型下暂降级为单节点执行，避免多节点回调覆盖同一日志记录。
