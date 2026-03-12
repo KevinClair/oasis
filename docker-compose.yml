@@ -1,0 +1,66 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: oasis-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-oasis_password}
+      MYSQL_DATABASE: oasis
+      MYSQL_USER: ${MYSQL_USER:-oasis}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-oasis_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - oasis-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  oasis-admin:
+    image: ${BACKEND_IMAGE:-ghcr.io/kevinclair/oasis/oasis-admin:latest}
+    container_name: oasis-admin
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/oasis?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-oasis}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-oasis_password}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - oasis-network
+
+  oasis-web:
+    image: ${FRONTEND_IMAGE:-ghcr.io/kevinclair/oasis/oasis-web:latest}
+    container_name: oasis-web
+    restart: unless-stopped
+    depends_on:
+      - oasis-admin
+    networks:
+      - oasis-network
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: oasis-nginx
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - oasis-web
+    networks:
+      - oasis-network
+
+volumes:
+  mysql_data:
+
+networks:
+  oasis-network:
+    driver: bridge
