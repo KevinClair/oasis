@@ -68,7 +68,7 @@ jobs:
           PAYLOAD=$(jq -n --arg text "$MESSAGE" '{msg_type: "text", content: {text: $text}}')
 
           # Send the request and capture both status code and response body
-          HTTP_RESPONSE=$(curl -sS -w "\n%{http_code}" -X POST "$FEISHU_WEBHOOK_URL" \
+          HTTP_RESPONSE=$(curl -sS --max-time 30 -w "\n%{http_code}" -X POST "$FEISHU_WEBHOOK_URL" \
             -H "Content-Type: application/json" \
             -d "$PAYLOAD")
 
@@ -80,7 +80,7 @@ jobs:
 
           # Fail the step if the HTTP status is not a valid 2xx code
           if ! [[ "$HTTP_CODE" =~ ^[0-9]+$ ]]; then
-            echo "::error::curl did not return a valid HTTP status code. Check that the webhook URL is reachable."
+            echo "::error::curl did not return a valid HTTP status code. This may indicate network issues, an invalid webhook URL format, or that the endpoint is unreachable."
             exit 1
           fi
 
