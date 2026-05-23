@@ -16,6 +16,8 @@ public interface JobInfoDao {
 
     JobInfo selectById(@Param("id") Long id);
 
+    List<JobInfo> selectByIds(@Param("ids") List<Long> ids);
+
     int insert(JobInfo jobInfo);
 
     int update(JobInfo jobInfo);

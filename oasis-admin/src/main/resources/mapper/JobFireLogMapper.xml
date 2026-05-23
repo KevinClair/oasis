@@ -124,6 +124,8 @@
             error_message = #{log.errorMessage},
             update_time = NOW()
         WHERE id = #{log.id}
+          AND attempt_no <![CDATA[ <= ]]> #{log.attemptNo}
+          AND status NOT IN ('SUCCESS', 'FAILED', 'TIMEOUT')
     </update>
 
     <update id="updateDispatch">
@@ -143,6 +145,43 @@
                  INNER JOIN job_info j ON l.job_id = j.id
         WHERE l.id = #{fireLogId}
         LIMIT 1
+    </select>
+
+    <select id="selectTimeoutRunning" resultType="com.github.kevin.oasis.models.entity.JobFireLog">
+        SELECT
+            l.id,
+            l.job_id AS jobId,
+            l.trigger_time AS triggerTime,
+            l.finish_time AS finishTime,
+            l.trigger_type AS triggerType,
+            l.executor_address AS executorAddress,
+            l.status,
+            l.attempt_no AS attemptNo,
+            l.error_message AS errorMessage,
+            l.trace_id AS traceId
+        FROM job_fire_log l
+        INNER JOIN job_info j ON l.job_id = j.id
+        WHERE l.status = 'RUNNING'
+          AND j.timeout_seconds IS NOT NULL
+          AND j.timeout_seconds > 0
+          AND l.trigger_time + (j.timeout_seconds * 1000) <![CDATA[ < ]]> #{now}
+    </select>
+
+    <update id="updateToTimeout">
+        UPDATE job_fire_log
+        SET status = 'TIMEOUT',
+            finish_time = #{now},
+            error_message = CONCAT('Execution timeout, triggered at ', trigger_time),
+            update_time = NOW()
+        WHERE id = #{id}
+          AND status = 'RUNNING'
+    </update>
+
+    <select id="hasRunningByJobId" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM job_fire_log
+        WHERE job_id = #{jobId}
+          AND status = 'RUNNING'
     </select>
 
 </mapper>

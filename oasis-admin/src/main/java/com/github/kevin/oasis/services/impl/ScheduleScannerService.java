@@ -1,19 +1,24 @@
 package com.github.kevin.oasis.services.impl;
 
 import com.github.kevin.oasis.config.SchedulerRuntimeProperties;
+import com.github.kevin.oasis.config.SchedulerRuntimeProperties;
 import com.github.kevin.oasis.dao.ExecutorNodeDao;
+import com.github.kevin.oasis.dao.JobFireLogDao;
 import com.github.kevin.oasis.dao.JobInfoDao;
 import com.github.kevin.oasis.dao.JobScheduleDao;
+import com.github.kevin.oasis.models.entity.JobFireLog;
 import com.github.kevin.oasis.models.entity.JobInfo;
 import com.github.kevin.oasis.models.entity.JobSchedule;
 import com.github.kevin.oasis.services.JobTriggerExecutorService;
-import com.github.kevin.oasis.services.strategy.schedule.ScheduleTypeStrategyRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 调度扫描器：扫描到期任务并触发执行
@@ -23,15 +28,14 @@ import java.util.List;
 @Slf4j
 public class ScheduleScannerService {
 
-    private static final Long DISABLED_NEXT_TRIGGER_TIME = Long.MAX_VALUE;
-
     private final SchedulerRuntimeProperties runtimeProperties;
     private final JobScheduleDao jobScheduleDao;
     private final JobInfoDao jobInfoDao;
+    private final JobFireLogDao jobFireLogDao;
     private final JobTriggerExecutorService jobTriggerExecutorService;
     private final ExecutorNodeDao executorNodeDao;
     private final ShardLeaseCoordinator shardLeaseCoordinator;
-    private final ScheduleTypeStrategyRegistry scheduleTypeStrategyRegistry;
+    private final TriggerPlanComputer triggerPlanComputer;
 
     @Scheduled(fixedDelayString = "${oasis.scheduler.runtime.scan-interval-ms:1000}")
     public void scanAndTrigger() {
@@ -60,9 +64,22 @@ public class ScheduleScannerService {
             return;
         }
 
+        // 批量加载 JobInfo，避免 N+1 查询
+        Map<Long, JobInfo> jobInfoMap = batchLoadJobInfoFromSchedules(dueSchedules);
         for (JobSchedule schedule : dueSchedules) {
-            processSingleSchedule(schedule, now);
+            JobInfo jobInfo = jobInfoMap.get(schedule.getJobId());
+            processSingleSchedule(schedule, now, jobInfo);
         }
+    }
+
+    private Map<Long, JobInfo> batchLoadJobInfoFromSchedules(List<JobSchedule> schedules) {
+        List<Long> jobIds = schedules.stream()
+                .map(JobSchedule::getJobId)
+                .distinct()
+                .collect(Collectors.toList());
+        List<JobInfo> jobInfos = jobInfoDao.selectByIds(jobIds);
+        return jobInfos.stream()
+                .collect(Collectors.toMap(JobInfo::getId, Function.identity()));
     }
 
     @Scheduled(fixedDelayString = "${oasis.scheduler.runtime.executor-offline-check-interval-ms:5000}")
@@ -74,10 +91,38 @@ public class ScheduleScannerService {
         }
     }
 
-    private void processSingleSchedule(JobSchedule schedule, long now) {
+    /**
+     * 执行超时看门狗：将 trigger_time + timeout_seconds 已过期的 RUNNING 记录标记为 TIMEOUT。
+     * executor 崩溃或网络断开导致 callback 丢失时，由此兜底恢复。
+     */
+    @Scheduled(fixedDelayString = "${oasis.scheduler.runtime.timeout-check-interval-ms:10000}")
+    public void checkExecutionTimeout() {
+        if (!runtimeProperties.isEnabled()) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+        List<JobFireLog> timeoutLogs = jobFireLogDao.selectTimeoutRunning(now);
+        if (timeoutLogs == null || timeoutLogs.isEmpty()) {
+            return;
+        }
+
+        for (JobFireLog timeoutLog : timeoutLogs) {
+            try {
+                int updated = jobFireLogDao.updateToTimeout(timeoutLog.getId(), now);
+                if (updated > 0) {
+                    log.warn("execution timeout, fireLogId={}, jobId={}, triggerTime={}",
+                            timeoutLog.getId(), timeoutLog.getJobId(), timeoutLog.getTriggerTime());
+                }
+            } catch (Exception e) {
+                log.error("mark timeout failed, fireLogId={}", timeoutLog.getId(), e);
+            }
+        }
+    }
+
+    private void processSingleSchedule(JobSchedule schedule, long now, JobInfo jobInfo) {
         try {
-            JobInfo jobInfo = jobInfoDao.selectById(schedule.getJobId());
-            TriggerPlan plan = buildTriggerPlan(jobInfo, now);
+            TriggerPlanComputer.TriggerPlan plan = triggerPlanComputer.compute(jobInfo, now, schedule.getNextTriggerTime());
 
             // CAS 抢占：只有版本号和原触发时间都匹配的节点才能推进 next_trigger_time。
             int claimed = jobScheduleDao.claimAndUpdateNextTrigger(
@@ -97,31 +142,5 @@ public class ScheduleScannerService {
         } catch (Exception e) {
             log.error("process schedule failed, jobId={}", schedule.getJobId(), e);
         }
-    }
-
-    private TriggerPlan buildTriggerPlan(JobInfo jobInfo, long now) {
-        if (jobInfo == null || Boolean.FALSE.equals(jobInfo.getStatus())) {
-            return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, false);
-        }
-
-        if (scheduleTypeStrategyRegistry.isOneShot(jobInfo.getScheduleType())) {
-            return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, true);
-        }
-
-        Long nextTriggerTime = scheduleTypeStrategyRegistry.nextTriggerTime(
-                jobInfo.getScheduleType(),
-                jobInfo.getScheduleConf(),
-                now
-        );
-        if (nextTriggerTime == null || nextTriggerTime <= now) {
-            log.warn("invalid schedule conf, disable job, jobId={}, type={}, conf={}",
-                    jobInfo.getId(), jobInfo.getScheduleType(), jobInfo.getScheduleConf());
-            return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, false);
-        }
-
-        return new TriggerPlan(nextTriggerTime, true, true);
-    }
-
-    private record TriggerPlan(Long nextTriggerTime, Boolean triggerStatus, boolean fireNow) {
     }
 }
