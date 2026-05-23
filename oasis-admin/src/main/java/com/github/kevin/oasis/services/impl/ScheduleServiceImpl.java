@@ -11,6 +11,7 @@ import com.github.kevin.oasis.models.entity.*;
 import com.github.kevin.oasis.models.vo.schedule.*;
 import com.github.kevin.oasis.services.JobTriggerExecutorService;
 import com.github.kevin.oasis.services.ScheduleService;
+import com.github.kevin.oasis.services.impl.timewheel.ScheduleTimeWheelDispatcher;
 import com.github.kevin.oasis.services.strategy.schedule.ScheduleTypeStrategyRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final DispatchQueueDao dispatchQueueDao;
     private final ApplicationDao applicationDao;
     private final JobTriggerExecutorService jobTriggerExecutorService;
+    private final ScheduleTimeWheelDispatcher scheduleTimeWheelDispatcher;
     private final ScheduleTypeStrategyRegistry scheduleTypeStrategyRegistry;
     private final SchedulerRuntimeProperties runtimeProperties;
 
@@ -134,6 +136,8 @@ public class ScheduleServiceImpl implements ScheduleService {
             jobScheduleDao.updateByJobId(schedule);
         }
 
+        scheduleTimeWheelDispatcher.removeJobFromWheel(exist.getId());
+
         return exist.getId();
     }
 
@@ -142,6 +146,11 @@ public class ScheduleServiceImpl implements ScheduleService {
     public int enableJobs(JobEnableRequest request, String currentUserId) {
         int updated = jobInfoDao.updateStatusByIds(request.getIds(), request.getStatus(), currentUserId);
         jobScheduleDao.updateTriggerStatusByJobIds(request.getIds(), request.getStatus());
+
+        for (Long jobId : request.getIds()) {
+            scheduleTimeWheelDispatcher.removeJobFromWheel(jobId);
+        }
+
         return updated;
     }
 

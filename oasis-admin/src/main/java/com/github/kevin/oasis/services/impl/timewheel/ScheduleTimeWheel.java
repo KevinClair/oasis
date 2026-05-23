@@ -84,6 +84,34 @@ public class ScheduleTimeWheel {
         return dedupe.size();
     }
 
+    /**
+     * 根据 jobId 清除 dedup 中所有关联条目。
+     * job 被 disable/delete 或调度配置变更时调用，防止 key 永久残留。
+     */
+    public void removeDedupByJobId(Long jobId) {
+        String prefix = jobId + ":";
+        dedupe.keySet().removeIf(key -> key.startsWith(prefix));
+    }
+
+    /**
+     * 清除 dedup 中 expectedNextTriggerTime 已过期的条目（兜底清理）。
+     *
+     * @param expireBeforeMs 过期时间阈值（毫秒时间戳）
+     */
+    public void cleanExpiredDedup(long expireBeforeMs) {
+        dedupe.keySet().removeIf(key -> {
+            try {
+                String[] parts = key.split(":");
+                if (parts.length >= 2) {
+                    long triggerTime = Long.parseLong(parts[1]);
+                    return triggerTime < expireBeforeMs;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+            return false;
+        });
+    }
+
     private void requeue(ScheduleWheelTask task, long now) {
         long delayMs = Math.max(0L, task.getExpectedNextTriggerTime() - now);
         long ticks = delayMs == 0 ? 0 : ((delayMs + tickMs - 1) / tickMs);

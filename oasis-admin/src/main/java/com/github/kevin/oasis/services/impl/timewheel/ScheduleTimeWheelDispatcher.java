@@ -7,15 +7,16 @@ import com.github.kevin.oasis.models.entity.JobInfo;
 import com.github.kevin.oasis.models.entity.JobSchedule;
 import com.github.kevin.oasis.services.JobTriggerExecutorService;
 import com.github.kevin.oasis.services.impl.ShardLeaseCoordinator;
-import com.github.kevin.oasis.services.strategy.schedule.ScheduleTypeStrategyRegistry;
+import com.github.kevin.oasis.services.impl.TriggerPlanComputer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 独立时间轮调度组件：
@@ -28,14 +29,12 @@ import java.util.List;
 @Slf4j
 public class ScheduleTimeWheelDispatcher {
 
-    private static final Long DISABLED_NEXT_TRIGGER_TIME = Long.MAX_VALUE;
-
     private final SchedulerRuntimeProperties runtimeProperties;
     private final JobScheduleDao jobScheduleDao;
     private final JobInfoDao jobInfoDao;
     private final JobTriggerExecutorService jobTriggerExecutorService;
     private final ShardLeaseCoordinator shardLeaseCoordinator;
-    private final ScheduleTypeStrategyRegistry scheduleTypeStrategyRegistry;
+    private final TriggerPlanComputer triggerPlanComputer;
 
     private ScheduleTimeWheel timeWheel;
 
@@ -45,6 +44,16 @@ public class ScheduleTimeWheelDispatcher {
                 runtimeProperties.getTimeWheelTickMs(),
                 runtimeProperties.getTimeWheelSlotCount()
         );
+    }
+
+    /**
+     * 当 job 被 disable/delete/调度变更时，清理时间轮中该 job 的 dedup 条目，
+     * 防止 key 永久残留导致内存泄漏。
+     */
+    public void removeJobFromWheel(Long jobId) {
+        if (timeWheel != null) {
+            timeWheel.removeDedupByJobId(jobId);
+        }
     }
 
     @Scheduled(fixedDelayString = "${oasis.scheduler.runtime.time-wheel-preload-interval-ms:1000}")
@@ -69,6 +78,19 @@ public class ScheduleTimeWheelDispatcher {
         }
     }
 
+    /**
+     * 兜底清理：每 5 分钟扫描 dedup map，移除 expectedNextTriggerTime 已过期超过 5 分钟的条目。
+     * 主路径依靠 removeJobFromWheel，此方法作为兜底防止异常情况下的泄漏。
+     */
+    @Scheduled(fixedDelayString = "${oasis.scheduler.runtime.time-wheel-dedup-cleanup-interval-ms:300000}")
+    public void cleanupExpiredDedup() {
+        if (timeWheel == null) {
+            return;
+        }
+        long expireBeforeMs = System.currentTimeMillis() - 300_000L;
+        timeWheel.cleanExpiredDedup(expireBeforeMs);
+    }
+
     @Scheduled(fixedDelayString = "${oasis.scheduler.runtime.time-wheel-tick-ms:1000}")
     public void consumeTick() {
         if (!runtimeProperties.isEnabled() || !runtimeProperties.isTimeWheelEnabled()) {
@@ -81,9 +103,22 @@ public class ScheduleTimeWheelDispatcher {
             return;
         }
 
+        // 批量加载 JobInfo，避免 N+1 查询
+        Map<Long, JobInfo> jobInfoMap = batchLoadJobInfo(dueTasks);
         for (ScheduleWheelTask task : dueTasks) {
-            processDueTask(task, now);
+            JobInfo jobInfo = jobInfoMap.get(task.getJobId());
+            processDueTask(task, now, jobInfo);
         }
+    }
+
+    private Map<Long, JobInfo> batchLoadJobInfo(List<ScheduleWheelTask> tasks) {
+        List<Long> jobIds = tasks.stream()
+                .map(ScheduleWheelTask::getJobId)
+                .distinct()
+                .collect(Collectors.toList());
+        List<JobInfo> jobInfos = jobInfoDao.selectByIds(jobIds);
+        return jobInfos.stream()
+                .collect(Collectors.toMap(JobInfo::getId, Function.identity()));
     }
 
     private List<JobSchedule> selectWindowSchedules(long now, long end) {
@@ -98,10 +133,9 @@ public class ScheduleTimeWheelDispatcher {
         return jobScheduleDao.selectSchedulesInWindow(now, end, limit);
     }
 
-    private void processDueTask(ScheduleWheelTask task, long now) {
+    private void processDueTask(ScheduleWheelTask task, long now, JobInfo jobInfo) {
         try {
-            JobInfo jobInfo = jobInfoDao.selectById(task.getJobId());
-            TriggerPlan plan = buildTriggerPlan(jobInfo, now);
+            TriggerPlanComputer.TriggerPlan plan = triggerPlanComputer.compute(jobInfo, now, task.getExpectedNextTriggerTime());
 
             int claimed = jobScheduleDao.claimAndUpdateNextTrigger(
                     task.getJobId(),
@@ -120,31 +154,6 @@ public class ScheduleTimeWheelDispatcher {
         } catch (Exception e) {
             log.error("time wheel process task failed, jobId={}", task.getJobId(), e);
         }
-    }
-
-    private TriggerPlan buildTriggerPlan(JobInfo jobInfo, long now) {
-        if (jobInfo == null || Boolean.FALSE.equals(jobInfo.getStatus())) {
-            return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, false);
-        }
-
-        if (scheduleTypeStrategyRegistry.isOneShot(jobInfo.getScheduleType())) {
-            return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, true);
-        }
-
-        Long nextTriggerTime = scheduleTypeStrategyRegistry.nextTriggerTime(
-                jobInfo.getScheduleType(),
-                jobInfo.getScheduleConf(),
-                now
-        );
-        if (nextTriggerTime == null || nextTriggerTime <= now) {
-            log.warn("invalid schedule conf in time wheel, disable job, jobId={}, type={}, conf={}",
-                    jobInfo.getId(), jobInfo.getScheduleType(), jobInfo.getScheduleConf());
-            return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, false);
-        }
-        return new TriggerPlan(nextTriggerTime, true, true);
-    }
-
-    private record TriggerPlan(Long nextTriggerTime, Boolean triggerStatus, boolean fireNow) {
     }
 }
 

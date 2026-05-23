@@ -13,7 +13,6 @@ import com.github.kevin.oasis.services.ExecutorDispatchService;
 import com.github.kevin.oasis.services.JobTriggerExecutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -32,9 +31,24 @@ public class JobTriggerExecutorServiceImpl implements JobTriggerExecutorService 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public Long trigger(JobInfo jobInfo, String triggerType, String triggerParam, Integer attemptNo) {
         int realAttempt = attemptNo == null || attemptNo <= 0 ? 1 : attemptNo;
+
+        // 阻塞策略检查：SERIAL/DISCARD 需要在触发前确认是否有 RUNNING 实例。
+        String blockStrategy = jobInfo.getBlockStrategy() == null ? "SERIAL" : jobInfo.getBlockStrategy().toUpperCase();
+        boolean hasRunning = false;
+        if (!"CONCURRENT".equals(blockStrategy)) {
+            hasRunning = jobFireLogDao.hasRunningByJobId(jobInfo.getId());
+        }
+        if (hasRunning) {
+            if ("DISCARD".equals(blockStrategy)) {
+                return null;
+            }
+            if ("SERIAL".equals(blockStrategy)) {
+                // SERIAL 策略：已有 RUNNING 则推迟到下次调度窗口，让调度器重试。
+                return null;
+            }
+        }
 
         // 先落执行主日志，拿到 fireLogId 作为整条执行链路的主键。
         JobFireLog log = JobFireLog.builder()
