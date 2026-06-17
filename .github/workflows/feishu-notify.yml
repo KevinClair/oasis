@@ -36,7 +36,7 @@ jobs:
           fi
 
           # Select fields based on event type; all values come from env vars
-          # to avoid shell injection from user-controlled content in ${{ }} expressions
+          # to avoid shell injection from user-controlled content in GitHub expressions
           if [ "$EVENT_NAME" = "issues" ]; then
             TITLE="$ISSUE_TITLE"
             URL="$ISSUE_URL"
