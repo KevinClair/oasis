@@ -9,6 +9,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties(SchedulerRuntimeProperties.class)
+@EnableConfigurationProperties({SchedulerRuntimeProperties.class, JwtProperties.class})
 public class SchedulerRuntimeConfig {
 }

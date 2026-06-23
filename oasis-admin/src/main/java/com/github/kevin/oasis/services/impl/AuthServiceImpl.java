@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final UserDao userDao;
+    private final JwtTokenUtils jwtTokenUtils;
 
     @Override
     public LoginResponse login(LoginRequest request) {
@@ -53,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
         // 使用JwtTokenUtils生成token
         // rememberMe为true时，token有效期为7天，否则为1天
         // JWT中存储用户工号（user_id）而不是主键id
-        String token = JwtTokenUtils.generateTokens(
+        String token = jwtTokenUtils.generateToken(
                 user.getUserId(),  // 存储用户工号
                 user.getUserName(),
                 request.getRememberMe()
