@@ -114,4 +114,27 @@
         )
     </insert>
 
+
+    <select id="selectLatestByJobId" resultMap="BaseResultMap">
+        SELECT id, job_id, fire_log_id, alarm_type, alarm_content, notify_status, trigger_time, create_time, update_time
+        FROM job_alarm_event
+        WHERE job_id = #{jobId}
+        ORDER BY trigger_time DESC
+        LIMIT 1
+    </select>
+
+    <select id="selectPendingEvents" resultMap="BaseResultMap">
+        SELECT id, job_id, fire_log_id, alarm_type, alarm_content, notify_status, trigger_time, create_time, update_time
+        FROM job_alarm_event
+        WHERE notify_status = 'PENDING'
+        ORDER BY trigger_time ASC
+        LIMIT 100
+    </select>
+
+    <update id="updateNotifyStatus">
+        UPDATE job_alarm_event
+        SET notify_status = #{notifyStatus},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
 </mapper>

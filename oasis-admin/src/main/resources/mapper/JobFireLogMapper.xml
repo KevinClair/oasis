@@ -156,3 +156,13 @@
           AND status = 'RUNNING'
     </update>
 
+    <select id="selectFailedSince" resultMap="BaseResultMap">
+        SELECT id, job_id, trigger_time, finish_time, trigger_type, executor_address,
+               status, attempt_no, error_message, trace_id, create_time, update_time
+        FROM job_fire_log
+        WHERE status IN ('FAILED', 'TIMEOUT')
+          AND UNIX_TIMESTAMP(update_time) * 1000 >= #{since}
+        ORDER BY update_time DESC
+    </select>
+
+</mapper>

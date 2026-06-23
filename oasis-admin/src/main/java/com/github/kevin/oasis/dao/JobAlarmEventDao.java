@@ -22,4 +22,13 @@ public interface JobAlarmEventDao {
     JobAlarmEvent selectById(@Param("id") Long id);
 
     int insert(JobAlarmEvent event);
+
+    /** 查询指定 job 最近一条告警事件（用于静默期判断） */
+    JobAlarmEvent selectLatestByJobId(@Param("jobId") Long jobId);
+
+    /** 查询所有待通知的告警事件 */
+    List<JobAlarmEvent> selectPendingEvents();
+
+    /** 更新告警事件通知状态 */
+    int updateNotifyStatus(@Param("id") Long id, @Param("notifyStatus") String notifyStatus);
 }
