@@ -145,4 +145,14 @@
         LIMIT 1
     </select>
 
-</mapper>
+
+    <select id="selectRunningByJobId" resultMap="BaseResultMap">
+        UPDATE job_fire_log
+        SET status = 'CANCELLED',
+            finish_time = UNIX_TIMESTAMP(NOW()) * 1000,
+            error_message = 'COVER_EARLY',
+            update_time = NOW()
+        WHERE job_id = #{jobId}
+          AND status = 'RUNNING'
+    </update>
+

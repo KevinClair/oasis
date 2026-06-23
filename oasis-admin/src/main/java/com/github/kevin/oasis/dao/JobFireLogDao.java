@@ -26,4 +26,10 @@ public interface JobFireLogDao {
     int updateDispatch(@Param("log") JobFireLog log);
 
     String selectAppCodeByFireLogId(@Param("fireLogId") Long fireLogId);
+
+    /** 查询指定任务正在执行的日志（用于阻塞策略判断） */
+    List<JobFireLog> selectRunningByJobId(@Param("jobId") Long jobId);
+
+    /** 取消指定任务的运行中日志（COVER_EARLY 策略） */
+    int cancelRunningByJobId(@Param("jobId") Long jobId);
 }
