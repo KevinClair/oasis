@@ -3,10 +3,12 @@ package com.github.kevin.oasis.services.impl.timewheel;
 import com.github.kevin.oasis.config.SchedulerRuntimeProperties;
 import com.github.kevin.oasis.dao.JobInfoDao;
 import com.github.kevin.oasis.dao.JobScheduleDao;
+import com.github.kevin.oasis.models.entity.JobSchedule;
 import com.github.kevin.oasis.models.entity.JobInfo;
 import com.github.kevin.oasis.models.entity.JobSchedule;
 import com.github.kevin.oasis.services.JobTriggerExecutorService;
 import com.github.kevin.oasis.services.impl.ShardLeaseCoordinator;
+import com.github.kevin.oasis.models.entity.JobSchedule;
 import com.github.kevin.oasis.services.strategy.schedule.ScheduleTypeStrategyRegistry;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -112,6 +114,15 @@ public class ScheduleTimeWheelDispatcher {
             );
 
             if (claimed <= 0 || !plan.fireNow()) {
+
+            // 错失触发（misfire）处理
+            if (plan.fireNow()) {
+                JobSchedule schedule = jobScheduleDao.selectByJobId(task.getJobId());
+                if (schedule != null && isMisfire(schedule.getMisfireStrategy(), task.getExpectedNextTriggerTime(), now)) {
+                    log.info("timewheel misfire skip, jobId={}, triggerTime={}, strategy={}", task.getJobId(), task.getExpectedNextTriggerTime(), schedule.getMisfireStrategy());
+                    return;
+                }
+            }
                 return;
             }
 
@@ -123,6 +134,7 @@ public class ScheduleTimeWheelDispatcher {
     }
 
     private TriggerPlan buildTriggerPlan(JobInfo jobInfo, long now) {
+
         if (jobInfo == null || Boolean.FALSE.equals(jobInfo.getStatus())) {
             return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, false);
         }
@@ -145,6 +157,17 @@ public class ScheduleTimeWheelDispatcher {
     }
 
     private record TriggerPlan(Long nextTriggerTime, Boolean triggerStatus, boolean fireNow) {
+    }
+
+    private boolean isMisfire(String misfireStrategy, Long expectedTriggerTime, long now) {
+        if (expectedTriggerTime == null) {
+            return false;
+        }
+        long lag = now - expectedTriggerTime;
+        if (lag < runtimeProperties.getMisfireThresholdMs()) {
+            return false;
+        }
+        return "IGNORE".equalsIgnoreCase(misfireStrategy != null ? misfireStrategy.trim() : "");
     }
 }
 

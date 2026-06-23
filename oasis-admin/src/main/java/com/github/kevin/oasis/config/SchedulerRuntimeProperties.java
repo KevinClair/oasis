@@ -167,4 +167,7 @@ public class SchedulerRuntimeProperties {
      * 重试最大退避时长（毫秒）
      */
     private long dispatchRetryMaxBackoffMs = 60000L;
+
+    /** 错失触发阈值（毫秒）。超过此值视为 misfire，按 misfire_strategy 处理 */
+    private long misfireThresholdMs = 60_000L;
 }

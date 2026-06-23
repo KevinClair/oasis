@@ -89,6 +89,12 @@ public class ScheduleScannerService {
             );
 
             if (claimed <= 0 || !plan.fireNow()) {
+
+            // 错失触发（misfire）处理
+            if (plan.fireNow() && isMisfire(schedule.getMisfireStrategy(), schedule.getNextTriggerTime(), now)) {
+                log.info("misfire skip, jobId={}, triggerTime={}, strategy={}", schedule.getJobId(), schedule.getNextTriggerTime(), schedule.getMisfireStrategy());
+                return;
+            }
                 return;
             }
 
@@ -100,6 +106,7 @@ public class ScheduleScannerService {
     }
 
     private TriggerPlan buildTriggerPlan(JobInfo jobInfo, long now) {
+
         if (jobInfo == null || Boolean.FALSE.equals(jobInfo.getStatus())) {
             return new TriggerPlan(DISABLED_NEXT_TRIGGER_TIME, false, false);
         }
@@ -123,5 +130,16 @@ public class ScheduleScannerService {
     }
 
     private record TriggerPlan(Long nextTriggerTime, Boolean triggerStatus, boolean fireNow) {
+    }
+
+    private boolean isMisfire(String misfireStrategy, Long expectedTriggerTime, long now) {
+        if (expectedTriggerTime == null) {
+            return false;
+        }
+        long lag = now - expectedTriggerTime;
+        if (lag < runtimeProperties.getMisfireThresholdMs()) {
+            return false;
+        }
+        return "IGNORE".equalsIgnoreCase(misfireStrategy != null ? misfireStrategy.trim() : "");
     }
 }
