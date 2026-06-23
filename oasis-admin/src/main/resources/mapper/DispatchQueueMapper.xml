@@ -105,7 +105,7 @@
         </where>
         ORDER BY update_time DESC, id DESC
         <if test="request.current != null and request.size != null">
-            LIMIT #{request.size} OFFSET ${(request.current - 1) * request.size}
+            LIMIT #{request.size} OFFSET #{request.offset}
         </if>
     </select>
 

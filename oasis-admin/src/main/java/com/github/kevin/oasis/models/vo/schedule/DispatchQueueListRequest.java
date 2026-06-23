@@ -17,4 +17,7 @@ public class DispatchQueueListRequest {
     private Long fireLogId;
 
     private Long jobId;
+
+    /** 计算字段：分页偏移量，由服务层填充 */
+    private Integer offset;
 }

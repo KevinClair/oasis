@@ -452,6 +452,7 @@ public class ScheduleServiceImpl implements ScheduleService {
         }
         if (request.getSize() > 200) {
             request.setSize(200);
+        request.setOffset((request.getCurrent() - 1) * request.getSize());
         }
     }
 
