@@ -19,22 +19,32 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.*;
 
 /**
- * Admin -> Executor 下发 HTTP 客户端。
+ * Admin -> Executor 下发 HTTP 客户端（异步 IO）。
+ * RestTemplate 的阻塞 HTTP 调用放入专用 IO 线程池，调度线程不阻塞。
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
+@RequiredArgsConstructor
 public class ExecutorInvokeClientImpl implements ExecutorInvokeClient {
+
+    private static final int IO_POOL_SIZE = 16;
 
     private final SchedulerRuntimeProperties runtimeProperties;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private volatile RestTemplate restTemplate;
+    private final ExecutorService ioPool = Executors.newFixedThreadPool(IO_POOL_SIZE, r -> {
+        Thread t = new Thread(r, "oasis-invoke-io");
+        t.setDaemon(true);
+        return t;
+    });
 
     @Override
-    public DispatchResult invoke(String address, Application app, Long fireLogId, Integer attemptNo, String handlerName, String triggerParam) {
+    public DispatchResult invoke(String address, Application app, Long fireLogId,
+                                  Integer attemptNo, String handlerName, String triggerParam) {
         try {
             ExecutorInvokeRequest request = ExecutorInvokeRequest.builder()
                     .fireLogId(fireLogId)
@@ -47,12 +57,21 @@ public class ExecutorInvokeClientImpl implements ExecutorInvokeClient {
             String url = "http://" + address + path;
             String body = objectMapper.writeValueAsString(request);
 
-            // Admin -> Executor 也使用同一套 HMAC 头，形成双向鉴权闭环。
             HttpEntity<String> entity = new HttpEntity<>(body, buildHeaders(app, path, body));
-            ResponseEntity<Map> response = getRestTemplate().postForEntity(url, entity, Map.class);
+
+            // 异步下发：HTTP 调用跑在 IO 线程池，调度线程不阻塞
+            Future<ResponseEntity<Map>> future = ioPool.submit(() ->
+                    getRestTemplate().postForEntity(url, entity, Map.class));
+
+            ResponseEntity<Map> response = future.get(
+                    runtimeProperties.getInvokeReadTimeoutMs() + 2000,
+                    TimeUnit.MILLISECONDS);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
-                return DispatchResult.builder().success(false).errorMessage("HTTP状态码=" + response.getStatusCode().value()).build();
+                return DispatchResult.builder()
+                        .success(false)
+                        .errorMessage("HTTP状态码=" + response.getStatusCode().value())
+                        .build();
             }
 
             Object responseBody = response.getBody();
@@ -64,6 +83,9 @@ public class ExecutorInvokeClientImpl implements ExecutorInvokeClient {
             }
 
             return DispatchResult.builder().success(false).errorMessage("执行器响应格式异常").build();
+        } catch (TimeoutException e) {
+            log.warn("invoke executor timeout, address={}, fireLogId={}", address, fireLogId);
+            return DispatchResult.builder().success(false).errorMessage("下发超时").build();
         } catch (Exception e) {
             log.warn("invoke executor failed, address={}, fireLogId={}, msg={}", address, fireLogId, e.getMessage());
             return DispatchResult.builder().success(false).errorMessage(e.getMessage()).build();
