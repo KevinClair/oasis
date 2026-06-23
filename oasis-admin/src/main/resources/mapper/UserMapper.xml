@@ -67,7 +67,7 @@
         SELECT
         <include refid="Base_Column_List"/>
         FROM user
-        WHERE (user_account = #{user} OR user_id = #{user}) AND password = #{password}
+        WHERE (user_account = #{user} OR user_id = #{user})
         AND status = 1
         LIMIT 1
     </select>
@@ -209,7 +209,6 @@
         SET password = #{newPassword},
             update_time = NOW()
         WHERE user_account = #{userAccount}
-          AND password = #{oldPassword}
     </update>
 
     <!-- 查询所有启用的用户（用于下拉选择） -->

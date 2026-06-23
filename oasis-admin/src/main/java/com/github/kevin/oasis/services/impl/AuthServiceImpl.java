@@ -9,12 +9,11 @@ import com.github.kevin.oasis.models.vo.oauth.LoginRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginResponse;
 import com.github.kevin.oasis.models.vo.oauth.UserInfoResponse;
 import com.github.kevin.oasis.services.AuthService;
+import com.github.kevin.oasis.utils.BCryptUtil;
 import com.github.kevin.oasis.utils.JwtTokenUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 /**
  * 认证服务实现类
@@ -30,12 +29,18 @@ public class AuthServiceImpl implements AuthService {
     public LoginResponse login(LoginRequest request) {
         // 参数校验已通过@Valid注解在Controller层完成
 
-        // 根据用户账号或工号和密码查询用户信息
-        User user = userDao.selectByUserAccountOrUserIdAndPassword(request.getUser(), request.getPassword());
+        // 根据用户账号或工号查询用户（密码校验在内存中进行，使用 BCrypt）
+        User user = userDao.selectByUserAccountOrUserId(request.getUser());
 
-        // 如果查不到用户信息，返回NEED_LOGIN异常
+        // 如果查不到用户信息，返回登录异常
         if (user == null) {
-            log.warn("登录失败：用户标识或密码错误, user={}", request.getUser());
+            log.warn("登录失败：用户不存在, user={}", request.getUser());
+            throw new BusinessException(ResponseStatusEnums.NEED_LOGIN.getCode(), "用户不存在");
+        }
+
+        // 使用 BCrypt 校验密码
+        if (!BCryptUtil.matches(request.getPassword(), user.getPassword())) {
+            log.warn("登录失败：密码错误, user={}", request.getUser());
             throw new BusinessException(ResponseStatusEnums.NEED_LOGIN.getCode(), "用户标识或密码错误");
         }
 
@@ -45,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "用户已被禁用");
         }
 
-        // 使用JwtTokenUtils生成token和refreshToken
+        // 使用JwtTokenUtils生成token
         // rememberMe为true时，token有效期为7天，否则为1天
         // JWT中存储用户工号（user_id）而不是主键id
         String token = JwtTokenUtils.generateTokens(
@@ -63,12 +68,10 @@ public class AuthServiceImpl implements AuthService {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .token(token)
-                .refreshToken(UUID.randomUUID().toString())
                 .build();
 
-        log.info("用户登录成功：userId={}, userAccount={}, userName={}, rememberMe={}, tokenExpiration={}",
-                user.getUserId(), user.getUserAccount(), user.getUserName(), request.getRememberMe(),
-                request.getRememberMe() != null && request.getRememberMe() ? "7天" : "1天");
+        log.info("用户登录成功：userId={}, userAccount={}, userName={}, rememberMe={}",
+                user.getUserId(), user.getUserAccount(), user.getUserName(), request.getRememberMe());
 
         return response;
     }
@@ -112,16 +115,24 @@ public class AuthServiceImpl implements AuthService {
     public boolean changePassword(ChangePasswordRequest request) {
         log.info("修改密码：userAccount={}", request.getUserAccount());
 
-        // 验证用户账号和旧密码
-        int updatedCount = userDao.updatePassword(
-                request.getUserAccount(),
-                request.getOldPassword(),
-                request.getNewPassword()
-        );
-
-        if (updatedCount == 0) {
-            log.warn("修改密码失败：用户账号或旧密码错误, userAccount={}", request.getUserAccount());
+        // 先查询用户，在内存中使用 BCrypt 校验旧密码
+        User user = userDao.selectByUserAccountOrUserId(request.getUserAccount());
+        if (user == null) {
+            log.warn("修改密码失败：用户账号不存在, userAccount={}", request.getUserAccount());
             throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "用户账号或旧密码错误");
+        }
+
+        if (!BCryptUtil.matches(request.getOldPassword(), user.getPassword())) {
+            log.warn("修改密码失败：旧密码错误, userAccount={}", request.getUserAccount());
+            throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "用户账号或旧密码错误");
+        }
+
+        // 使用 BCrypt 加密新密码后更新
+        String encodedNewPassword = BCryptUtil.encode(request.getNewPassword());
+        int updatedCount = userDao.updatePassword(request.getUserAccount(), encodedNewPassword);
+        if (updatedCount == 0) {
+            log.warn("修改密码失败：更新失败, userAccount={}", request.getUserAccount());
+            throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "修改密码失败");
         }
 
         log.info("修改密码成功：userAccount={}", request.getUserAccount());
@@ -129,4 +140,3 @@ public class AuthServiceImpl implements AuthService {
         return true;
     }
 }
-

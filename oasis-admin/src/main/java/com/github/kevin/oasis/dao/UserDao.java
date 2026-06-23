@@ -13,123 +13,34 @@ import java.util.List;
 @Mapper
 public interface UserDao {
 
-    /**
-     * 根据用户账号或工号查询用户
-     *
-     * @param user 用户账号或工号
-     * @return 用户信息
-     */
     User selectByUserAccountOrUserId(@Param("user") String user);
 
     /**
-     * 根据用户账号或工号和密码查询用户
-     *
-     * @param user 用户账号或工号
-     * @param password 密码
-     * @return 用户信息
-     */
-    User selectByUserAccountOrUserIdAndPassword(@Param("user") String user, @Param("password") String password);
-
-    /**
-     * 根据用户名查询用户
-     *
-     * @param username 用户名
-     * @return 用户信息
-     */
-    User selectByUsername(@Param("username") String username);
-
-    /**
-     * 根据用户ID查询用户
-     *
-     * @param id 用户ID
-     * @return 用户信息
-     */
-    User selectById(@Param("id") Long id);
-
-    /**
-     * 根据用户名和密码查询用户 (已废弃，请使用selectByUserAccountOrUserIdAndPassword)
-     *
-     * @param username 用户名
-     * @param password 密码
-     * @return 用户信息
+     * @deprecated 密码校验已改用 BCrypt，此方法不再使用。
      */
     @Deprecated
-    User selectByUsernameAndPassword(@Param("username") String username, @Param("password") String password);
+    User selectByUserAccountOrUserIdAndPassword(@Param("user") String user, @Param("password") String password);
 
-    /**
-     * 插入用户
-     *
-     * @param user 用户信息
-     * @return 影响行数
-     */
+    User selectById(@Param("id") Long id);
+
     int insert(User user);
 
-    /**
-     * 更新用户
-     *
-     * @param user 用户信息
-     * @return 影响行数
-     */
     int update(User user);
 
-    /**
-     * 查询用户列表（分页）
-     *
-     * @param request 查询参数
-     * @return 用户列表
-     */
     List<User> selectUserList(@Param("request") UserListRequest request);
 
-    /**
-     * 查询用户总数
-     *
-     * @param request 查询参数
-     * @return 用户总数
-     */
     Long countUserList(@Param("request") UserListRequest request);
 
-    /**
-     * 批量删除用户
-     *
-     * @param ids 用户ID列表
-     * @return 影响行数
-     */
     int deleteUsersByIds(@Param("ids") List<Long> ids);
 
-    /**
-     * 切换用户状态（启用/禁用）
-     *
-     * @param ids 用户ID列表
-     * @return 影响行数
-     */
     int toggleUserStatus(@Param("ids") List<Long> ids);
 
-    /**
-     * 批量重置用户密码
-     *
-     * @param ids 用户ID列表
-     * @param password 新密码
-     * @return 影响行数
-     */
     int resetPassword(@Param("ids") List<Long> ids, @Param("password") String password);
 
     /**
-     * 根据用户账号和旧密码更新密码
-     *
-     * @param userAccount 用户账号
-     * @param oldPassword 旧密码
-     * @param newPassword 新密码
-     * @return 影响行数
+     * 根据用户账号更新密码（新密码已 BCrypt 加密）。
      */
-    int updatePassword(@Param("userAccount") String userAccount,
-                      @Param("oldPassword") String oldPassword,
-                      @Param("newPassword") String newPassword);
+    int updatePassword(@Param("userAccount") String userAccount, @Param("newPassword") String newPassword);
 
-    /**
-     * 查询所有启用的用户（用于下拉选择）
-     *
-     * @return 用户列表
-     */
     List<User> selectAllEnabledUsers();
 }
-

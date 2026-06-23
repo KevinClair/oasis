@@ -10,6 +10,7 @@ import com.github.kevin.oasis.models.entity.User;
 import com.github.kevin.oasis.models.entity.UserRole;
 import com.github.kevin.oasis.models.vo.systemManage.*;
 import com.github.kevin.oasis.services.UserManageService;
+import com.github.kevin.oasis.utils.BCryptUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -177,7 +178,7 @@ public class UserManageServiceImpl implements UserManageService {
                     .userId(request.getUserId())
                     .userAccount(request.getUserAccount())
                     .userName(request.getUserName())
-                    .password(request.getPassword()) // TODO: 需要加密
+                    .password(BCryptUtil.encode(request.getPassword()))
                     .nickName(request.getNickName())
                     .userGender(request.getUserGender())
                     .email(request.getEmail())
@@ -321,7 +322,7 @@ public class UserManageServiceImpl implements UserManageService {
         // 默认密码：123456
         String defaultPassword = "123456";
 
-        int updatedCount = userDao.resetPassword(request.getIds(), defaultPassword);
+        int updatedCount = userDao.resetPassword(request.getIds(), BCryptUtil.encode(defaultPassword));
 
         log.info("重置密码成功，更新数量：{}", updatedCount);
 
