@@ -1,22 +1,27 @@
 package com.github.kevin.oasis.starter.model;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
- * Invoke request from Oasis admin.
+ * 下发执行请求（admin -> executor）
  */
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExecutorInvokeRequest {
 
-    @NotNull
     private Long fireLogId;
 
-    private Integer attemptNo = 1;
+    private Integer attemptNo;
 
-    @NotBlank
     private String handlerName;
 
     private String triggerParam;
+
+    /** 执行超时时间（秒） */
+    private Integer timeoutSeconds;
 }

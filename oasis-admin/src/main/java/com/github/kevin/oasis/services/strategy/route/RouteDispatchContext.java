@@ -27,4 +27,7 @@ public class RouteDispatchContext {
     private String handlerName;
 
     private String triggerParam;
+
+    /** 执行超时时间（秒） */
+    private Integer timeoutSeconds;
 }

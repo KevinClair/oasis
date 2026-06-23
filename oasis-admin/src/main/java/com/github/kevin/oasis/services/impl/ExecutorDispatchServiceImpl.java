@@ -56,6 +56,7 @@ public class ExecutorDispatchServiceImpl implements ExecutorDispatchService {
                 .attemptNo(attemptNo)
                 .handlerName(jobInfo.getHandlerName())
                 .triggerParam(triggerParam)
+                .timeoutSeconds(jobInfo.getTimeoutSeconds())
                 .build();
 
         // 路由模式切换统一由 Spring 策略注册中心负责，避免 switch 分支膨胀。

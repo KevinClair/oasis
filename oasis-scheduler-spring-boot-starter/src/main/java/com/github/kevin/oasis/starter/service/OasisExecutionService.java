@@ -14,7 +14,7 @@ import java.net.InetAddress;
 import java.util.concurrent.*;
 
 /**
- * Execute invoke requests in worker pool.
+ * 执行调用请求的线程池服务，支持超时中断。
  */
 @Component
 @RequiredArgsConstructor
@@ -47,7 +47,6 @@ public class OasisExecutionService {
 
     public boolean submit(ExecutorInvokeRequest request) {
         try {
-            // 仅负责入队，避免 admin 调用线程被执行逻辑阻塞。
             worker().submit(() -> execute(request));
             return true;
         } catch (Exception e) {
@@ -60,43 +59,83 @@ public class OasisExecutionService {
         String status = "SUCCESS";
         String errMsg = null;
 
-        OasisJobContext context = new OasisJobContext(request.getFireLogId(), request.getAttemptNo(), request.getTriggerParam());
+        OasisJobContext context = new OasisJobContext(
+                request.getFireLogId(), request.getAttemptNo(), request.getTriggerParam());
+
+        OasisJobHandler handler = null;
+        try {
+            handler = handlerRegistry.get(request.getHandlerName())
+                    .orElseThrow(() -> new IllegalStateException("handler not found: " + request.getHandlerName()));
+        } catch (Exception e) {
+            status = "FAILED";
+            errMsg = e.getMessage();
+            log.error("handler lookup failed, fireLogId={}, handler={}",
+                    request.getFireLogId(), request.getHandlerName(), e);
+            doCallback(request, context, status, errMsg);
+            return;
+        }
+
+        int timeoutSec = request.getTimeoutSeconds() != null && request.getTimeoutSeconds() > 0
+                ? request.getTimeoutSeconds() : 30;
+
+        final OasisJobHandler finalHandler = handler;
+        Future<?> future = worker().submit(() -> {
+            try {
+                OasisJobResult result = finalHandler.execute(context);
+                return result;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return OasisJobResult.builder().success(false).retryable(false)
+                        .message("执行超时被中断").build();
+            } catch (Exception e) {
+                return OasisJobResult.builder().success(false).retryable(false)
+                        .message(e.getMessage()).build();
+            }
+        });
 
         try {
-            OasisJobHandler handler = handlerRegistry.get(request.getHandlerName())
-                    .orElseThrow(() -> new IllegalStateException("handler not found: " + request.getHandlerName()));
-
-            OasisJobResult result = handler.execute(context);
+            OasisJobResult result = (OasisJobResult) future.get(timeoutSec, TimeUnit.SECONDS);
             if (!result.isSuccess()) {
-                status = result.isRetryable() ? "FAILED" : "FAILED";
+                status = "FAILED";
                 errMsg = result.getMessage();
             }
+        } catch (TimeoutException e) {
+            future.cancel(true);
+            status = "TIMEOUT";
+            errMsg = "执行超时，超过 " + timeoutSec + " 秒";
+            context.log("TIMEOUT: " + errMsg);
+            log.warn("handler execution timed out, fireLogId={}, handler={}, timeout={}s",
+                    request.getFireLogId(), request.getHandlerName(), timeoutSec);
         } catch (Exception e) {
             status = "FAILED";
             errMsg = e.getMessage();
             context.log("exception: " + e.getMessage());
-            log.error("execute handler failed, fireLogId={}, handler={}", request.getFireLogId(), request.getHandlerName(), e);
-        } finally {
-            int seq = 1;
-            // 先上报执行日志分片，再上报最终状态，便于 admin 侧回溯失败上下文。
-            for (OasisJobContext.LogLine line : context.getLogs()) {
-                oasisAdminClient.callbackLog(ExecutorCallbackLogRequest.builder()
-                        .fireLogId(request.getFireLogId())
-                        .seqNo(seq++)
-                        .logTime(line.time())
-                        .logContent(line.content())
-                        .build());
-            }
+            log.error("execute handler failed, fireLogId={}, handler={}",
+                    request.getFireLogId(), request.getHandlerName(), e);
+        }
 
-            oasisAdminClient.callbackResult(ExecutorCallbackResultRequest.builder()
+        doCallback(request, context, status, errMsg);
+    }
+
+    private void doCallback(ExecutorInvokeRequest request, OasisJobContext context, String status, String errMsg) {
+        int seq = 1;
+        for (OasisJobContext.LogLine line : context.getLogs()) {
+            oasisAdminClient.callbackLog(ExecutorCallbackLogRequest.builder()
                     .fireLogId(request.getFireLogId())
-                    .attemptNo(request.getAttemptNo())
-                    .status(status)
-                    .errorMessage(errMsg)
-                    .executorAddress(localAddress())
-                    .finishTime(System.currentTimeMillis())
+                    .seqNo(seq++)
+                    .logTime(line.time())
+                    .logContent(line.content())
                     .build());
         }
+
+        oasisAdminClient.callbackResult(ExecutorCallbackResultRequest.builder()
+                .fireLogId(request.getFireLogId())
+                .attemptNo(request.getAttemptNo())
+                .status(status)
+                .errorMessage(errMsg)
+                .executorAddress(localAddress())
+                .finishTime(System.currentTimeMillis())
+                .build());
     }
 
     private String localAddress() {
