@@ -1,0 +1,17 @@
+# Sample executor application Dockerfile
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /app
+# Copy the starter for local build; in real use you'd add it as a dependency
+COPY oasis-scheduler-spring-boot-starter/pom.xml oasis-scheduler-spring-boot-starter/pom.xml
+RUN mvn -f oasis-scheduler-spring-boot-starter/pom.xml -DskipTests install
+# Your application would copy its own pom.xml and src, then build
+
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=build /app/your-executor-app/target/*.jar app.jar
+ENV OASIS_SCHEDULER_APPCODE="my-app"
+ENV OASIS_SCHEDULER_APPKEY="your-app-key"
+ENV OASIS_SCHEDULER_ADMIN_BASEURL="http://oasis-admin:8080"
+ENV OASIS_SCHEDULER_SERVER_PORT="19091"
+EXPOSE 19091
+ENTRYPOINT ["java", "-jar", "app.jar"]
