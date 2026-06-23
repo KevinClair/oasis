@@ -1,0 +1,92 @@
+name: Feishu Notify
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Send notification to Feishu
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          EVENT_NAME: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+          ACTOR: ${{ github.actor }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD: ${{ github.event.pull_request.head.ref }}
+          PR_BASE: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -e
+
+          # Fail clearly if the secret is not configured
+          if [ -z "$FEISHU_WEBHOOK_URL" ]; then
+            echo "::error::FEISHU_WEBHOOK_URL is not set."
+            echo "::error::Go to Settings -> Secrets and variables -> Actions and add a repository secret named FEISHU_WEBHOOK_URL with your Feishu robot webhook URL."
+            exit 1
+          fi
+
+          # Select fields based on event type; all values come from env vars
+          # to avoid shell injection from user-controlled content in ${{ }} expressions
+          if [ "$EVENT_NAME" = "issues" ]; then
+            TITLE="$ISSUE_TITLE"
+            URL="$ISSUE_URL"
+            NUMBER="$ISSUE_NUMBER"
+            MESSAGE="$(printf '📌 New Issue #%s\nEvent: Issue Opened\nRepo: %s\nBy: %s\nTitle: %s\nLink: %s' \
+              "$NUMBER" "$REPO" "$ACTOR" "$TITLE" "$URL")"
+          else
+            TITLE="$PR_TITLE"
+            URL="$PR_URL"
+            NUMBER="$PR_NUMBER"
+            MESSAGE="$(printf '🔀 New Pull Request #%s\nEvent: PR Opened\nRepo: %s\nBy: %s\nTitle: %s\nBranch: %s -> %s\nLink: %s' \
+              "$NUMBER" "$REPO" "$ACTOR" "$TITLE" "$PR_HEAD" "$PR_BASE" "$URL")"
+          fi
+
+          # Log the fields we are about to send (no sensitive URL)
+          echo "--- Feishu notification fields ---"
+          echo "Event   : ${EVENT_NAME}"
+          echo "Repo    : ${REPO}"
+          echo "Actor   : ${ACTOR}"
+          echo "Number  : #${NUMBER}"
+          echo "Title   : ${TITLE}"
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            echo "Branch  : ${PR_HEAD} -> ${PR_BASE}"
+          fi
+          echo "Link    : ${URL}"
+          echo "----------------------------------"
+
+          # Build the JSON payload using jq (available on ubuntu-latest)
+          PAYLOAD=$(jq -n --arg text "$MESSAGE" '{msg_type: "text", content: {text: $text}}')
+
+          # Send the request and capture both status code and response body
+          HTTP_RESPONSE=$(curl -sS --max-time 30 -w "\n%{http_code}" -X POST "$FEISHU_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD")
+
+          HTTP_BODY=$(echo "$HTTP_RESPONSE" | head -n -1)
+          HTTP_CODE=$(echo "$HTTP_RESPONSE" | tail -n 1)
+
+          echo "HTTP status code : ${HTTP_CODE}"
+          echo "Response body    : ${HTTP_BODY}"
+
+          # Fail the step if the HTTP status is not a valid 2xx code
+          if ! [[ "$HTTP_CODE" =~ ^[0-9]+$ ]]; then
+            echo "::error::curl did not return a valid HTTP status code. This may indicate network issues, an invalid webhook URL format, or that the endpoint is unreachable."
+            exit 1
+          fi
+
+          if [[ "$HTTP_CODE" -lt 200 || "$HTTP_CODE" -ge 300 ]]; then
+            echo "::error::Feishu webhook returned a non-2xx status (${HTTP_CODE}). Check the response body above for details."
+            exit 1
+          fi
+
+          echo "✅ Feishu notification sent successfully."

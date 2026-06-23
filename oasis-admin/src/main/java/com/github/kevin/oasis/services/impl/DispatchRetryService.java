@@ -17,6 +17,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * dispatch_queue 异步重试处理器。
@@ -51,12 +54,25 @@ public class DispatchRetryService {
             return;
         }
 
+        // 批量加载 JobInfo，避免 N+1 查询
+        Map<Long, JobInfo> jobInfoMap = batchLoadJobInfoFromQueues(dueRecords);
         for (DispatchQueue queue : dueRecords) {
-            processSingleRecord(queue, now);
+            JobInfo jobInfo = jobInfoMap.get(queue.getJobId());
+            processSingleRecord(queue, now, jobInfo);
         }
     }
 
-    private void processSingleRecord(DispatchQueue queue, long now) {
+    private Map<Long, JobInfo> batchLoadJobInfoFromQueues(List<DispatchQueue> queues) {
+        List<Long> jobIds = queues.stream()
+                .map(DispatchQueue::getJobId)
+                .distinct()
+                .collect(Collectors.toList());
+        List<JobInfo> jobInfos = jobInfoDao.selectByIds(jobIds);
+        return jobInfos.stream()
+                .collect(Collectors.toMap(JobInfo::getId, Function.identity()));
+    }
+
+    private void processSingleRecord(DispatchQueue queue, long now, JobInfo jobInfo) {
         try {
             // 先抢占队列记录，避免多线程/多节点重复消费。
             if (dispatchQueueDao.claimProcessing(queue.getId()) <= 0) {
@@ -64,7 +80,6 @@ public class DispatchRetryService {
             }
 
             DispatchRetryPayload payload = parsePayload(queue.getPayload());
-            JobInfo jobInfo = jobInfoDao.selectById(queue.getJobId());
             if (jobInfo == null) {
                 markDeadWithCompensation(queue, payload, "任务不存在");
                 jobFireLogDao.updateDispatch(JobFireLog.builder()
@@ -107,7 +122,7 @@ public class DispatchRetryService {
         int maxRetry = payload.getMaxRetry() == null ? 0 : payload.getMaxRetry();
         int nextRetryCount = queue.getRetryCount() + 1;
 
-        if (nextRetryCount > maxRetry) {
+        if (nextRetryCount >= maxRetry) {
             markDeadWithCompensation(queue, payload, errorMessage);
             jobFireLogDao.updateDispatch(JobFireLog.builder()
                     .id(queue.getFireLogId())
