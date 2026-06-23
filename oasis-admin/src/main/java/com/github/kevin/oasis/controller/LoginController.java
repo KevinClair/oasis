@@ -12,6 +12,7 @@ import com.github.kevin.oasis.models.vo.oauth.LoginRequest;
 import com.github.kevin.oasis.models.vo.oauth.LoginResponse;
 import com.github.kevin.oasis.models.vo.oauth.UserInfoResponse;
 import com.github.kevin.oasis.services.AuthService;
+import com.github.kevin.oasis.utils.JwtTokenUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +30,8 @@ public class LoginController {
 
     private final AuthService authService;
     private final LoginRateLimiter loginRateLimiter;
+    private final JwtTokenUtils jwtTokenUtils;
 
-    /**
-     * 用户登录接口
-     */
     @PostMapping("/login")
     public Response<LoginResponse> login(HttpServletRequest servletRequest,
                                          @Valid @RequestBody LoginRequest request) {
@@ -40,15 +39,11 @@ public class LoginController {
         if (!loginRateLimiter.tryAcquire(clientIp)) {
             throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "登录过于频繁，请稍后再试");
         }
-
         log.info("收到登录请求：user={}, rememberMe={}, ip={}", request.getUser(), request.getRememberMe(), clientIp);
         LoginResponse response = authService.login(request);
         return Response.success(response);
     }
 
-    /**
-     * 获取当前登录用户详细信息
-     */
     @GetMapping("/getUserInfo")
     @Permission
     public Response<UserInfoResponse> getUserInfo() {
@@ -58,20 +53,22 @@ public class LoginController {
         return Response.success(response);
     }
 
-    /**
-     * 修改密码（需要登录态）
-     */
+    @PostMapping("/refreshToken")
+    @Permission
+    public Response<LoginResponse> refreshToken() {
+        UserInfo currentUser = UserThreadLocal.getUserInfo();
+        String token = jwtTokenUtils.generateToken(currentUser.getUserId(), currentUser.getUserName(), false);
+        return Response.success(LoginResponse.builder().token(token).userId(currentUser.getUserId()).build());
+    }
+
     @PostMapping("/changePassword")
     @Permission
     public Response<Boolean> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         UserInfo currentUser = UserThreadLocal.getUserInfo();
         log.info("收到修改密码请求：userAccount={}, operator={}", request.getUserAccount(), currentUser.getUserId());
-
-        // 只能修改自己的密码
         if (!currentUser.getUserId().equals(request.getUserAccount())) {
             throw new BusinessException(ResponseStatusEnums.FAIL.getCode(), "只能修改自己的密码");
         }
-
         boolean success = authService.changePassword(request);
         return Response.success(success);
     }

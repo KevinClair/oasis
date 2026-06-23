@@ -14,7 +14,7 @@ import java.net.InetAddress;
 import java.util.concurrent.*;
 
 /**
- * 执行调用请求的线程池服务，支持超时中断。
+ * 执行调用请求的线程池服务，支持超时中断和异步回调。
  */
 @Component
 @RequiredArgsConstructor
@@ -26,6 +26,13 @@ public class OasisExecutionService {
     private final OasisSchedulerProperties properties;
 
     private ExecutorService worker;
+
+    /** 回调专用线程池，避免工作线程被 HTTP 回调阻塞 */
+    private final ExecutorService callbackPool = Executors.newFixedThreadPool(4, r -> {
+        Thread t = new Thread(r, "oasis-callback");
+        t.setDaemon(true);
+        return t;
+    });
 
     private synchronized ExecutorService worker() {
         if (worker == null) {
@@ -62,15 +69,14 @@ public class OasisExecutionService {
         OasisJobContext context = new OasisJobContext(
                 request.getFireLogId(), request.getAttemptNo(), request.getTriggerParam());
 
-        OasisJobHandler handler = null;
+        OasisJobHandler handler;
         try {
             handler = handlerRegistry.get(request.getHandlerName())
                     .orElseThrow(() -> new IllegalStateException("handler not found: " + request.getHandlerName()));
         } catch (Exception e) {
             status = "FAILED";
             errMsg = e.getMessage();
-            log.error("handler lookup failed, fireLogId={}, handler={}",
-                    request.getFireLogId(), request.getHandlerName(), e);
+            log.error("handler lookup failed, fireLogId={}", request.getFireLogId(), e);
             doCallback(request, context, status, errMsg);
             return;
         }
@@ -78,11 +84,9 @@ public class OasisExecutionService {
         int timeoutSec = request.getTimeoutSeconds() != null && request.getTimeoutSeconds() > 0
                 ? request.getTimeoutSeconds() : 30;
 
-        final OasisJobHandler finalHandler = handler;
         Future<?> future = worker().submit(() -> {
             try {
-                OasisJobResult result = finalHandler.execute(context);
-                return result;
+                return handler.execute(context);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return OasisJobResult.builder().success(false).retryable(false)
@@ -103,39 +107,41 @@ public class OasisExecutionService {
             future.cancel(true);
             status = "TIMEOUT";
             errMsg = "执行超时，超过 " + timeoutSec + " 秒";
-            context.log("TIMEOUT: " + errMsg);
-            log.warn("handler execution timed out, fireLogId={}, handler={}, timeout={}s",
-                    request.getFireLogId(), request.getHandlerName(), timeoutSec);
+            log.warn("handler execution timed out, fireLogId={}, timeout={}s", request.getFireLogId(), timeoutSec);
         } catch (Exception e) {
             status = "FAILED";
             errMsg = e.getMessage();
-            context.log("exception: " + e.getMessage());
-            log.error("execute handler failed, fireLogId={}, handler={}",
-                    request.getFireLogId(), request.getHandlerName(), e);
+            log.error("execute handler failed, fireLogId={}", request.getFireLogId(), e);
         }
 
         doCallback(request, context, status, errMsg);
     }
 
+    /** 异步回调：HTTP 调用在 callbackPool 中执行，不阻塞工作线程 */
     private void doCallback(ExecutorInvokeRequest request, OasisJobContext context, String status, String errMsg) {
-        int seq = 1;
-        for (OasisJobContext.LogLine line : context.getLogs()) {
-            oasisAdminClient.callbackLog(ExecutorCallbackLogRequest.builder()
-                    .fireLogId(request.getFireLogId())
-                    .seqNo(seq++)
-                    .logTime(line.time())
-                    .logContent(line.content())
-                    .build());
-        }
-
-        oasisAdminClient.callbackResult(ExecutorCallbackResultRequest.builder()
-                .fireLogId(request.getFireLogId())
-                .attemptNo(request.getAttemptNo())
-                .status(status)
-                .errorMessage(errMsg)
-                .executorAddress(localAddress())
-                .finishTime(System.currentTimeMillis())
-                .build());
+        callbackPool.execute(() -> {
+            try {
+                int seq = 1;
+                for (OasisJobContext.LogLine line : context.getLogs()) {
+                    oasisAdminClient.callbackLog(ExecutorCallbackLogRequest.builder()
+                            .fireLogId(request.getFireLogId())
+                            .seqNo(seq++)
+                            .logTime(line.time())
+                            .logContent(line.content())
+                            .build());
+                }
+                oasisAdminClient.callbackResult(ExecutorCallbackResultRequest.builder()
+                        .fireLogId(request.getFireLogId())
+                        .attemptNo(request.getAttemptNo())
+                        .status(status)
+                        .errorMessage(errMsg)
+                        .executorAddress(localAddress())
+                        .finishTime(System.currentTimeMillis())
+                        .build());
+            } catch (Exception e) {
+                log.error("callback failed, fireLogId={}", request.getFireLogId(), e);
+            }
+        });
     }
 
     private String localAddress() {
@@ -155,5 +161,6 @@ public class OasisExecutionService {
         if (worker != null) {
             worker.shutdown();
         }
+        callbackPool.shutdown();
     }
 }
